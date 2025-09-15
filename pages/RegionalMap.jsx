@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, Download, Search, TrendingUp } from 'lucide-react';
+import { Filter, Download, Search } from 'lucide-react';
 import Button from '../components/Button';
 import RegionDetailModal from '../components/RegionDetailModal';
-import DataNebula from '../components/DataNebula';
+import TrendAtlas from '../components/TrendAtlas';
+import { db } from '../src/firebaseConfig';
+import { ref, onValue } from 'firebase/database';
 
 const RegionalMap = () => {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTrend, setSelectedTrend] = useState('AI Technology');
+  const [selectedTrendId, setSelectedTrendId] = useState('');
   const [timeRange, setTimeRange] = useState('7d');
   const [mapData, setMapData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const trends = [
-    'AI Technology',
-    'Sustainable Energy',
-    'Remote Work',
-    'Electric Vehicles',
-    'Digital Health'
-  ];
+  const [trends, setTrends] = useState([]);
 
   const regions = [
     { id: 'us', name: 'United States', interest: 100, growth: '+23%' },
@@ -40,6 +35,24 @@ const RegionalMap = () => {
   ];
 
   useEffect(() => {
+    const trendsRef = ref(db, 'trends');
+    const unsubscribe = onValue(trendsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const trendsArray = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key],
+        }));
+        setTrends(trendsArray);
+        if (trendsArray.length > 0) {
+          setSelectedTrendId(trendsArray[0].id);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     // Simulate fetching new data based on trend and time range
     const simulatedNewData = regions.map(region => ({
       ...region,
@@ -51,7 +64,7 @@ const RegionalMap = () => {
       region.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setMapData(filteredData);
-  }, [selectedTrend, timeRange, searchTerm]);
+  }, [selectedTrendId, timeRange, searchTerm]);
 
   const handleRegionClick = (region) => {
     setSelectedRegion(region);
@@ -64,6 +77,7 @@ const RegionalMap = () => {
   };
 
   const sortedRegions = [...mapData].sort((a, b) => b.interest - a.interest);
+  const selectedTrend = trends.find(t => t.id === selectedTrendId);
 
   return (
     <div className="min-h-screen bg-gray-900 p-6">
@@ -71,8 +85,8 @@ const RegionalMap = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Trend Universe</h1>
-            <p className="text-gray-400">Explore a nebula of trending topics and insights</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Trend Atlas</h1>
+            <p className="text-gray-400">A visual exploration of global trend activity</p>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm">
@@ -92,12 +106,12 @@ const RegionalMap = () => {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Select Trend</label>
               <select
-                value={selectedTrend}
-                onChange={(e) => setSelectedTrend(e.target.value)}
+                value={selectedTrendId}
+                onChange={(e) => setSelectedTrendId(e.target.value)}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 {trends.map(trend => (
-                  <option key={trend} value={trend}>{trend}</option>
+                  <option key={trend.id} value={trend.id}>{trend.keyword}</option>
                 ))}
               </select>
             </div>
@@ -117,12 +131,12 @@ const RegionalMap = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Search Constellations</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Search Regions</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search the universe..."
+                  placeholder="Search for a region..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -132,52 +146,11 @@ const RegionalMap = () => {
           </div>
         </div>
 
-        {/* Main Content: Data Nebula and Rankings */}
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Data Nebula Visualization */}
-          <div className="lg:col-span-2 bg-gray-800 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-2">Data Nebula</h2>
-            <p className="text-gray-400 mb-4">A cosmic view of interest levels for '{selectedTrend}'.</p>
-            <DataNebula data={sortedRegions} onRegionClick={handleRegionClick} />
-          </div>
-
-          {/* Regional Rankings List */}
-          <div className="space-y-6">
-            <div className="bg-gray-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Brightest Stars</h3>
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                {sortedRegions
-                  .map((region, index) => (
-                    <motion.div
-                      key={region.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
-                      onClick={() => handleRegionClick(region)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded-full">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{region.name}</p>
-                          <p className="text-gray-400 text-sm">Interest: {region.interest}/100</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-blue-400 font-semibold text-sm">{region.growth}</p>
-                        <div className="flex items-center text-gray-400 text-xs">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          Trending
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
-                }
-              </div>
-            </div>
-          </div>
+        {/* Main Content: Trend Atlas */}
+        <div className="bg-gray-800 rounded-xl p-6">
+            <h2 className="text-xl font-semibold text-white mb-2">Global Interest for '{selectedTrend?.keyword}'</h2>
+            <p className="text-gray-400 mb-4">Each region is a clickable card. The color and size of the card represent its interest level.</p>
+            <TrendAtlas regions={sortedRegions} onRegionClick={handleRegionClick} />
         </div>
       </div>
       {isModalOpen && (

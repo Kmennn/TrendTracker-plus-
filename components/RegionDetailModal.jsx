@@ -3,13 +3,11 @@ import { motion } from 'framer-motion';
 import { X, Globe } from 'lucide-react';
 import Button from './Button';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../src/firebaseConfig';
-import { ref, query, orderByChild, equalTo, get } from 'firebase/database';
 
 const RegionDetailModal = ({ region, trend, onClose }) => {
   const navigate = useNavigate();
 
-  if (!region) return null;
+  if (!region || !trend) return null;
 
   const detailedTrends = [
     { name: 'AI in Healthcare', interest: 92, growth: '+35%' },
@@ -17,36 +15,9 @@ const RegionDetailModal = ({ region, trend, onClose }) => {
     { name: 'AI Ethics Regulations', interest: 75, growth: '+15%' },
   ];
 
-  const handleViewMore = async () => {
+  const handleViewMore = () => {
     onClose();
-    try {
-      const trendsRef = ref(db, 'trends');
-      const q = query(trendsRef, orderByChild('keyword'), equalTo(trend));
-      const snapshot = await get(q);
-
-      if (snapshot.exists()) {
-        const trendId = Object.keys(snapshot.val())[0];
-        navigate(`/trend/${trendId}`);
-      } else {
-        console.warn(`Trend not found for keyword: ${trend}`);
-        alert(`Could not find a specific trend for "${trend}". Navigating to a default trend page.`);
-        const allTrendsRef = ref(db, 'trends');
-        const allTrendsSnapshot = await get(allTrendsRef);
-        if (allTrendsSnapshot.exists()) {
-          const firstTrendId = Object.keys(allTrendsSnapshot.val())[0];
-          navigate(`/trend/${firstTrendId}`);
-        } else {
-          alert("Could not find any trends to display.");
-        }
-      }
-    } catch (error) {
-      console.error("Firebase Query Failed:", error);
-      alert(
-        "Navigation failed! The database query could not be completed.\n\n" +
-        "This is likely because the required database index has not been deployed. " +
-        "Please ensure you are logged into Firebase and the database rules have been deployed."
-      );
-    }
+    navigate(`/trend/${trend.id}`);
   };
 
   return (
@@ -54,7 +25,7 @@ const RegionDetailModal = ({ region, trend, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <motion.div
@@ -73,7 +44,7 @@ const RegionDetailModal = ({ region, trend, onClose }) => {
 
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">Overall Trend: {trend}</h3>
+            <h3 className="text-lg font-semibold text-purple-400 mb-2">Overall Trend: {trend.keyword}</h3>
             <div className="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
               <div>
                 <p className="text-gray-400">Interest Level</p>
