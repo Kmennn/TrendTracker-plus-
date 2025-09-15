@@ -10,36 +10,48 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // On initial load, try to get the user from localStorage
   useEffect(() => {
-    // Simulate checking for a user token in local storage
-    const timer = setTimeout(() => {
-      // To test the public-only routes, you can set the initial user to null
-      // setUser(null);
-      
-      // To test the protected routes, uncomment this block
-      setUser({
-        name: 'John Doe',
-        email: 'john.doe@company.com',
-        avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=8b5cf6&color=fff',
-        role: 'Admin', // Role can be 'Admin' or 'User'
-      });
+    setLoading(true);
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error('Failed to parse user from localStorage', error);
+      localStorage.removeItem('user'); // Clear corrupted data
+    } finally {
       setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    }
   }, []);
+  
+  // When user state changes, update localStorage
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('user');
+      }
+    } catch (error) {
+      console.error('Failed to save user to localStorage', error);
+    }
+  }, [user]);
+
 
   const login = (email, password) => {
     console.log('Logging in with:', { email, password });
     setLoading(true);
     return new Promise(resolve => {
       setTimeout(() => {
-        setUser({
+        const loggedInUser = {
           name: 'John Doe',
           email: email,
           avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=8b5cf6&color=fff',
           role: 'Admin',
-        });
+        };
+        setUser(loggedInUser);
         setLoading(false);
         resolve({ success: true });
       }, 1000);
@@ -51,12 +63,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     return new Promise(resolve => {
       setTimeout(() => {
-        setUser({
+        const signedUpUser = {
           name: name,
           email: email,
           avatar: `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=8b5cf6&color=fff`,
           role: 'User',
-        });
+        };
+        setUser(signedUpUser);
         setLoading(false);
         resolve({ success: true });
       }, 1000);
