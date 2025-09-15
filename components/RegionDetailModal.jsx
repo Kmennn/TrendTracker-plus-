@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Globe } from 'lucide-react';
 import Button from './Button';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../src/firebaseConfig';
+import { ref, query, orderByChild, equalTo, get } from 'firebase/database';
 
 const RegionDetailModal = ({ region, trend, onClose }) => {
   const navigate = useNavigate();
@@ -15,8 +17,36 @@ const RegionDetailModal = ({ region, trend, onClose }) => {
     { name: 'AI Ethics Regulations', interest: 75, growth: '+15%' },
   ];
 
-  const handleViewMore = () => {
-    navigate(`/trend-details/${encodeURIComponent(region.name)}`, { state: { trend } });
+  const handleViewMore = async () => {
+    onClose();
+    try {
+      const trendsRef = ref(db, 'trends');
+      const q = query(trendsRef, orderByChild('keyword'), equalTo(trend));
+      const snapshot = await get(q);
+
+      if (snapshot.exists()) {
+        const trendId = Object.keys(snapshot.val())[0];
+        navigate(`/trend/${trendId}`);
+      } else {
+        console.warn(`Trend not found for keyword: ${trend}`);
+        alert(`Could not find a specific trend for "${trend}". Navigating to a default trend page.`);
+        const allTrendsRef = ref(db, 'trends');
+        const allTrendsSnapshot = await get(allTrendsRef);
+        if (allTrendsSnapshot.exists()) {
+          const firstTrendId = Object.keys(allTrendsSnapshot.val())[0];
+          navigate(`/trend/${firstTrendId}`);
+        } else {
+          alert("Could not find any trends to display.");
+        }
+      }
+    } catch (error) {
+      console.error("Firebase Query Failed:", error);
+      alert(
+        "Navigation failed! The database query could not be completed.\n\n" +
+        "This is likely because the required database index has not been deployed. " +
+        "Please ensure you are logged into Firebase and the database rules have been deployed."
+      );
+    }
   };
 
   return (
@@ -71,7 +101,13 @@ const RegionDetailModal = ({ region, trend, onClose }) => {
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleViewMore}>
+          <Button
+            variant="solid"
+            size="lg"
+            onClick={handleViewMore}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+          >
+            <Globe className="w-5 h-5 mr-3" />
             View More Insights for {region.name}
           </Button>
         </div>

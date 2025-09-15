@@ -1,33 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Youtube, Instagram, Twitter, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../src/firebaseConfig';
+import { ref, query, orderByChild, equalTo, get } from 'firebase/database';
 import RadarScanner from '../components/RadarScanner';
 
 const TrendRadar = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [displayedTrends, setDisplayedTrends] = useState([]);
+  const navigate = useNavigate();
 
   const allTrends = {
     youtube: [
-        { id: 1, title: 'AI Revolution: The Next Frontier', metric: '3.1M views', link: 'https://www.youtube.com/results?search_query=AI+Revolution' },
-        { id: 2, title: 'The Future of Space Exploration', metric: '2.5M views', link: 'https://www.youtube.com/results?search_query=Future+of+Space+Exploration' },
-        { id: 3, title: 'Sustainable Tech Innovations', metric: '1.8M views', link: 'https://www.youtube.com/results?search_query=Sustainable+Tech' },
-        { id: 4, title: 'Ultimate Productivity Hacks 2024', metric: '1.5M views', link: 'https://www.youtube.com/results?search_query=Productivity+Hacks+2024' },
-        { id: 5, title: 'DIY Smart Home Automation', metric: '980k views', link: 'https://www.youtube.com/results?search_query=DIY+Smart+Home+Automation' },
+        { id: 'ai-revolution', title: 'AI Revolution: The Next Frontier', metric: '3.1M views' },
+        { id: 'space-exploration', title: 'The Future of Space Exploration', metric: '2.5M views' },
+        { id: 'sustainable-tech', title: 'Sustainable Tech Innovations', metric: '1.8M views' },
+        { id: 'productivity-hacks-2024', title: 'Ultimate Productivity Hacks 2024', metric: '1.5M views' },
+        { id: 'diy-smart-home', title: 'DIY Smart Home Automation', metric: '980k views' },
     ],
     instagram: [
-        { id: 9, title: '#DigitalNomadLife', metric: '4.2M posts', link: 'https://www.instagram.com/explore/tags/digitalnomadlife/' },
-        { id: 10, title: '#EcoFriendlyLiving', metric: '3.1M posts', link: 'https://www.instagram.com/explore/tags/ecofriendlyliving/' },
-        { id: 11, title: '#generativeart', metric: '2.8M posts', link: 'https://www.instagram.com/explore/tags/generativeart/' },
-        { id: 12, title: '#HomeWorkout', metric: '2.2M posts', link: 'https://www.instagram.com/explore/tags/homeworkout/' },
-        { id: 13, title: '#VeganRecipes', metric: '1.9M posts', link: 'https://www.instagram.com/explore/tags/veganrecipes/' },
+        { id: 'digital-nomad', title: '#DigitalNomadLife', metric: '4.2M posts' },
+        { id: 'eco-friendly', title: '#EcoFriendlyLiving', metric: '3.1M posts' },
+        { id: 'generative-art', title: '#generativeart', metric: '2.8M posts' },
+        { id: 'home-workout', title: '#HomeWorkout', metric: '2.2M posts' },
+        { id: 'vegan-recipes', title: '#VeganRecipes', metric: '1.9M posts' },
     ],
     twitter: [
-        { id: 17, title: '#CryptoNews', metric: '5.5M tweets', link: 'https://twitter.com/search?q=%23CryptoNews' },
-        { id: 18, title: '#TechForGood', metric: '4.8M tweets', link: 'https://twitter.com/search?q=%23TechForGood' },
-        { id: 19, title: '#FutureOfWork', metric: '4.1M tweets', link: 'https://twitter.com/search?q=%23FutureOfWork' },
-        { id: 20, title: '#NFTCommunity', metric: '3.5M tweets', link: 'https://twitter.com/search?q=%23NFTCommunity' },
-        { id: 21, title: '#eSports', metric: '3.2M tweets', link: 'https://twitter.com/search?q=%23eSports' },
+        { id: 'crypto-news', title: '#CryptoNews', metric: '5.5M tweets' },
+        { id: 'tech-for-good', title: '#TechForGood', metric: '4.8M tweets' },
+        { id: 'future-of-work', title: '#FutureOfWork', metric: '4.1M tweets' },
+        { id: 'nft-community', title: '#NFTCommunity', metric: '3.5M tweets' },
+        { id: 'esports', title: '#eSports', metric: '3.2M tweets' },
     ],
   };
 
@@ -59,6 +63,26 @@ const TrendRadar = () => {
         name: 'Twitter',
         border: 'border-blue-500/30 hover:border-blue-500/80'
     },
+  };
+
+  const handleTrendClick = async (item) => {
+    const trendsRef = ref(db, 'trends');
+    const q = query(trendsRef, orderByChild('keyword'), equalTo(item.title));
+    const snapshot = await get(q);
+    if (snapshot.exists()) {
+      const trendId = Object.keys(snapshot.val())[0];
+      navigate(`/trend/${trendId}`);
+    } else {
+      console.warn(`Trend not found for keyword: ${item.title}`);
+      // Fallback: Navigate to the first trend if the clicked one isn't found
+      const allTrendsRef = ref(db, 'trends');
+      const allTrendsSnapshot = await get(allTrendsRef);
+      if (allTrendsSnapshot.exists()) {
+        const allTrends = allTrendsSnapshot.val();
+        const firstTrendId = Object.keys(allTrends)[0];
+        navigate(`/trend/${firstTrendId}`);
+      }
+    }
   };
 
   const activeTheme = themes[activeTab];
@@ -111,12 +135,10 @@ const TrendRadar = () => {
                 <AnimatePresence mode="popLayout">
                     <motion.div className="space-y-3" layout>
                         {displayedTrends.map(item => (
-                            <motion.a 
-                                key={item.id} 
-                                href={item.link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className={`block p-px rounded-lg transition-all duration-300 group ${activeTheme.secondary} bg-gradient-to-r from-white/5 to-transparent`}
+                            <motion.div
+                                key={item.id}
+                                onClick={() => handleTrendClick(item)}
+                                className={`block p-px rounded-lg transition-all duration-300 group ${activeTheme.secondary} bg-gradient-to-r from-white/5 to-transparent cursor-pointer`}
                                 layout
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -133,7 +155,7 @@ const TrendRadar = () => {
                                         <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transform transition-transform duration-300 group-hover:rotate-45" />
                                     </div>
                                 </div>
-                            </motion.a>
+                            </motion.div>
                         ))}
                     </motion.div>
                 </AnimatePresence>

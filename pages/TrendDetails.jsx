@@ -1,60 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { db } from '../src/firebaseConfig';
+import { ref, onValue } from 'firebase/database';
 import { TrendingUp, Bookmark, Share2, Download, MessageCircle, ExternalLink, Calendar, Globe, Tag } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import Button from '../components/Button';
 
 const TrendDetails = () => {
-  const { regionName } = useParams();
-  const location = useLocation();
-  const { trend: overallTrend } = location.state || {};
-
+  const { id } = useParams();
   const [trend, setTrend] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (regionName && overallTrend) {
-      // Simulate loading trend details based on region and trend
-      setTrend({
-        id: `${regionName}-${overallTrend.replace(/\s+/g, '-')}`,
-        title: `${overallTrend} in ${regionName}`,
-        description: `Analysis of the '${overallTrend}' trend in ${regionName}, exploring market adoption, investment, and future outlook.`,
-        category: 'Technology',
-        growth: `+${Math.floor(Math.random() * 50) + 10}%`,
-        sentiment: 'positive',
-        maturity: ['emerging', 'growing', 'mature'][Math.floor(Math.random() * 3)],
-        impact: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-        timeline: `${Math.floor(Math.random() * 6) + 6}-18 months`,
-        regions: [regionName, 'Global'],
-        tags: [overallTrend, regionName, 'Trending'],
-        sources: [
-          { title: `Report on ${overallTrend} in ${regionName}`, url: '#', date: '2024-01-15' },
-          { title: `Market Analysis: ${regionName}`, url: '#', date: '2024-01-12' },
-        ],
-        metrics: {
-          searchVolume: Array.from({ length: 7 }, (_, i) => ({
-            month: new Date(2023, 6 + i, 1).toLocaleString('default', { month: 'short' }),
-            volume: Math.floor(Math.random() * 50000) + 10000,
-          })),
-          maturityRadar: [
-            { subject: 'Awareness', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-            { subject: 'Adoption', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-            { subject: 'Investment', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-            { subject: 'Innovation', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-            { subject: 'Market Size', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-            { subject: 'Regulation', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
-          ]
-        }
-      });
+    const trendRef = ref(db, `trends/${id}`);
+    const unsubscribe = onValue(trendRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Enhance trend data with mock details for presentation
+        setTrend({
+          ...data,
+          id,
+          description: data.description || `Analysis of the '${data.keyword}' trend, exploring market adoption, investment, and future outlook.`,
+          growth: data.growth || `+${Math.floor(Math.random() * 50) + 10}%`,
+          sentiment: data.sentiment || 'positive',
+          maturity: data.maturity || ['emerging', 'growing', 'mature'][Math.floor(Math.random() * 3)],
+          impact: data.impact || ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+          timeline: data.timeline || `${Math.floor(Math.random() * 6) + 6}-18 months`,
+          regions: data.regions || ['Global', 'North America'],
+          tags: data.tags || [data.keyword, data.category, 'Trending'],
+          sources: data.sources || [
+            { title: `Report on ${data.keyword}`, url: '#', date: '2024-01-15' },
+            { title: `Market Analysis: ${data.category}`, url: '#', date: '2024-01-12' },
+          ],
+          metrics: data.metrics || {
+            searchVolume: Array.from({ length: 7 }, (_, i) => ({
+              month: new Date(2023, 6 + i, 1).toLocaleString('default', { month: 'short' }),
+              volume: Math.floor(Math.random() * 50000) + (data.volume || 10000),
+            })),
+            maturityRadar: [
+                { subject: 'Awareness', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+                { subject: 'Adoption', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+                { subject: 'Investment', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+                { subject: 'Innovation', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+                { subject: 'Market Size', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+                { subject: 'Regulation', A: Math.floor(Math.random() * 80) + 20, fullMark: 100 },
+            ]
+          }
+        });
 
-      setComments([
-        { id: 1, user: 'AI Analyst', avatar: 'https://ui-avatars.com/api/?name=AI+Analyst&background=6366f1&color=fff', comment: `The trend of ${overallTrend} in ${regionName} is showing significant promise.`, time: '2 hours ago' },
-      ]);
-    }
-  }, [regionName, overallTrend]);
+        setComments([
+          { id: 1, user: 'AI Analyst', avatar: 'https://ui-avatars.com/api/?name=AI+Analyst&background=6366f1&color=fff', comment: `The trend of ${data.keyword} is showing significant promise.`, time: '2 hours ago' },
+        ]);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -70,10 +76,18 @@ const TrendDetails = () => {
     }
   };
 
-  if (!trend) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-white">Loading trend details...</div>
+      </div>
+    );
+  }
+
+  if (!trend) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <div className="text-white">Trend not found.</div>
       </div>
     );
   }
@@ -101,7 +115,7 @@ const TrendDetails = () => {
                   {trend.maturity}
                 </span>
               </div>
-              <h1 className="text-4xl font-bold text-white mb-4">{trend.title}</h1>
+              <h1 className="text-4xl font-bold text-white mb-4">{trend.keyword}</h1>
               <p className="text-gray-300 text-lg leading-relaxed">{trend.description}</p>
             </div>
             <div className="flex items-center space-x-3 ml-6">

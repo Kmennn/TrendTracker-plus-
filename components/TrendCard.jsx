@@ -27,6 +27,11 @@ const TrendCard = ({ trend }) => {
     e.stopPropagation();
     setIsShareModalOpen(true);
   };
+
+  const handleViewDetails = (e) => {
+    e.stopPropagation();
+    navigate(`/trend/${trend.id}`);
+  };
   
   const getSentimentIcon = (sentiment) => {
     switch (sentiment) {
@@ -50,13 +55,13 @@ const TrendCard = ({ trend }) => {
     <>
       <motion.div
         whileHover={{ y: -2 }}
-        className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 transition-all duration-300"
+        className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 transition-all duration-300 cursor-pointer"
         onClick={() => navigate(`/trend/${trend.id}`)}
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
-              <h3 className="text-lg font-semibold text-white hover:text-purple-400 cursor-pointer transition-colors">
+              <h3 className="text-lg font-semibold text-white hover:text-purple-400 transition-colors">
                 {trend.keyword}
               </h3>
               {getSentimentIcon(trend.sentiment)}
@@ -117,6 +122,7 @@ const TrendCard = ({ trend }) => {
           <Button 
             size="sm" 
             variant="outline"
+            onClick={handleViewDetails}
           >
             <ExternalLink className="w-3 h-3 mr-1" />
             View Details

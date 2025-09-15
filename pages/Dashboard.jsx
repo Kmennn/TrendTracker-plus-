@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, Bell, Bookmark, TrendingUp, ExternalLink, ArrowLeft } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import TrendCard from '../components/TrendCard';
@@ -13,6 +13,7 @@ import NotificationPanel from '../components/NotificationPanel';
 import FilterModal from '../components/FilterModal';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [trends, setTrends] = useState([]);
@@ -180,12 +181,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                <Link to={`/trend/${todaysHighlight.id}`}>
-                    <Button variant="solid" size="sm">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Explore
-                    </Button>
-                </Link>
+                <Button variant="solid" size="sm" onClick={() => navigate(`/trend/${todaysHighlight.id}`)}>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Explore
+                </Button>
               </div>
             </motion.div>
           )}
