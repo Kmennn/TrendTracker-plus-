@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Globe from 'react-globe.gl';
 
 const DashboardGlobe = () => {
@@ -6,17 +6,17 @@ const DashboardGlobe = () => {
   const containerRef = useRef();
   const [size, setSize] = useState({ width: 0, height: 0 });
 
+  const handleResize = useCallback(() => {
+    if (containerRef.current) {
+      setSize({
+        width: containerRef.current.offsetWidth,
+        height: containerRef.current.offsetHeight,
+      });
+    }
+  }, []);
+
   // This effect runs once to set up the resize listener.
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
-      }
-    };
-
     handleResize(); // Set the initial size
     window.addEventListener('resize', handleResize);
 
@@ -24,7 +24,7 @@ const DashboardGlobe = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []); // The empty array [] ensures this runs only once.
+  }, [handleResize]);
 
   // This effect runs whenever the size changes, to set up the globe controls.
   useEffect(() => {
@@ -33,7 +33,7 @@ const DashboardGlobe = () => {
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.5;
     }
-  }, [size]); // This depends on `size`, so it runs after the globe is rendered.
+  }, [size]); // This depends on `size`.
 
   // Generate random data for the globe points
   const gData = [...Array(20).keys()].map(() => ({

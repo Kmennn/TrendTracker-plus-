@@ -106,7 +106,7 @@ const AIChat = () => {
   
   return (
     <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
@@ -124,9 +124,9 @@ const AIChat = () => {
           </Button>
         </div>
         
-        <div className="grid lg:grid-cols-4 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Chat Interface */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col h-[600px]">
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -152,10 +152,10 @@ const AIChat = () => {
                         )}
                       </div>
                       
-                      <div className={`flex-1 max-w-md ${
+                      <div className={`flex-1 max-w-lg ${
                         message.type === 'user' ? 'text-right' : ''
                       }`}>
-                        <div className={`rounded-lg p-4 ${
+                        <div className={`rounded-lg p-4 inline-block ${
                           message.type === 'ai'
                             ? 'bg-gray-700 text-white'
                             : 'bg-purple-600 text-white'
@@ -163,7 +163,9 @@ const AIChat = () => {
                           <p className="text-sm leading-relaxed">{message.content}</p>
                         </div>
                         
-                        <div className="flex items-center justify-between mt-2">
+                        <div className={`flex items-center mt-2 ${
+                           message.type === 'user' ? 'justify-end' : 'justify-between'
+                        }`}>
                           <span className="text-xs text-gray-400">
                             {formatTime(message.timestamp)}
                           </span>

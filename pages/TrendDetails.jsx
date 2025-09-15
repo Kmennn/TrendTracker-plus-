@@ -129,7 +129,7 @@ const TrendDetails = () => {
               <div className="text-2xl font-bold text-green-400">{trend.growth}</div>
               <div className="text-gray-400 text-sm">Growth Rate</div>
             </div>
-            <div className_="text-center">
+            <div className="text-center">
               <div className="text-2xl font-bold text-orange-400">{trend.impact}</div>
               <div className="text-gray-400 text-sm">Impact Level</div>
             </div>
