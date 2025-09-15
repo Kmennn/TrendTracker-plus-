@@ -1,0 +1,19 @@
+.globe {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: url('https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg');
+  background-size: cover;
+  box-shadow: -25px -25px 25px rgba(255, 255, 255, 0.1) inset, 0 0 50px #4a90e2;
+  animation: rotate 40s linear infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes rotate {
+  to {
+    background-position: 100% 0;
+  }
+}

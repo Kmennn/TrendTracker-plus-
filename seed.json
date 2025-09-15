@@ -1,0 +1,43 @@
+{
+  "trends": [
+    { "id": 1, "keyword": "AI in Healthcare", "volume": 12000, "category": "Technology" },
+    { "id": 2, "keyword": "Sustainable Fashion", "volume": 8500, "category": "E-commerce" },
+    { "id": 3, "keyword": "Remote Work Tools", "volume": 15000, "category": "Business" },
+    { "id": 4, "keyword": "Plant-Based Diets", "volume": 10000, "category": "Health" },
+    { "id": 5, "keyword": "Cybersecurity Threats", "volume": 9500, "category": "Technology" }
+  ],
+  "users": [
+    { "id": 1, "name": "John Smith", "email": "john@example.com", "role": "Admin", "status": "active", "lastLogin": "2024-07-29T10:00:00Z" },
+    { "id": 2, "name": "Sarah Johnson", "email": "sarah@example.com", "role": "Analyst", "status": "active", "lastLogin": "2024-07-29T09:00:00Z" },
+    { "id": 3, "name": "Mike Chen", "email": "mike@example.com", "role": "Viewer", "status": "inactive", "lastLogin": "2024-07-28T12:00:00Z" },
+    { "id": 4, "name": "Emily Davis", "email": "emily@example.com", "role": "Analyst", "status": "active", "lastLogin": "2024-07-29T10:30:00Z" }
+  ],
+  "reports": [
+      { "id": 1, "title": "Q2 2024 Technology Trends", "date": "2024-07-01", "author": "John Smith" },
+      { "id": 2, "title": "E-commerce Growth Analysis", "date": "2024-06-15", "author": "Sarah Johnson" },
+      { "id": 3, "title": "Cybersecurity Market Overview", "date": "2024-05-20", "author": "John Smith" }
+  ],
+  "system_stats": {
+    "totalUsers": 247,
+    "activeUsers": 189,
+    "totalTrends": 1543,
+    "apiCalls": 45672,
+    "storageUsed": "2.4 TB",
+    "uptime": "99.8%"
+  },
+  "alerts": [
+      { "id": 1, "type": "warning", "message": "High API usage detected", "timestamp": "2024-07-29T10:30:00Z" },
+      { "id": 2, "type": "info", "message": "System backup completed successfully", "timestamp": "2024-07-29T10:00:00Z" },
+      { "id": 3, "type": "error", "message": "Failed to sync external data source", "timestamp": "2024-07-29T09:00:00Z" }
+  ],
+  "recent_activity": [
+    { "id": 1, "user": "Sarah Johnson", "action": "generated a new report", "timestamp": "2024-07-29T10:45:00Z" },
+    { "id": 2, "user": "John Smith", "action": "updated system settings", "timestamp": "2024-07-29T09:15:00Z" },
+    { "id": 3, "user": "Mike Chen", "action": "viewed the 'AI in Healthcare' trend", "timestamp": "2024-07-28T14:00:00Z" }
+  ],
+  "summary": {
+      "newTrends": 5,
+      "reportsGenerated": 3,
+      "newUsers": 1
+  }
+}
