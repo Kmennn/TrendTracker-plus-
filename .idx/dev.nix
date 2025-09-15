@@ -7,13 +7,21 @@
     pkgs.firebase-tools
     pkgs.google-cloud-sdk
   ];
+  # Environment variables for the workspace
+  env = {
+    PROJECT_ID = "trendtracker-48f9a";
+    LOCATION = "us-central1";
+    # Set the path to the service account credentials file.
+    # This is used by the Google Cloud client library to authenticate.
+    GOOGLE_APPLICATION_CREDENTIALS = "serviceAccountKey.json";
+  };
   idx = {
     extensions = ["dbaeumer.vscode-eslint"];
     workspace = {
       onCreate = {npm-install = "npm install";};
       onStart = {
         dev-server = "npm run dev";
-        backend-service = "node backend/server.js"; # New line to start the backend
+        backend-service = "npm run start:backend > backend.log 2>&1";
       };
     };
     previews = {

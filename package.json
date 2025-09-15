@@ -11,6 +11,7 @@
     "start:backend": "nodemon backend/server.js"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^0.5.0",
     "axios": "^1.12.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

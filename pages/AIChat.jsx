@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Sparkles, 
-  TrendingUp, 
-  BarChart3, 
+import {
+  Send,
+  Bot,
+  User,
+  Sparkles,
+  TrendingUp,
+  BarChart3,
   Lightbulb,
   Copy,
   ThumbsUp,
@@ -20,14 +20,14 @@ const AIChat = () => {
     {
       id: 1,
       type: 'ai',
-      content: 'Hello! I\'m your AI trend analyst. I can help you understand market trends, analyze data, and provide strategic insights. What would you like to explore today?',
+      content: 'Hello! I\'m your AI trend analyst, powered by Google\'s Gemini. I can help you understand market trends, analyze data, and provide strategic insights. What would you like to explore today?',
       timestamp: new Date(Date.now() - 60000)
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  
+
   const suggestedQuestions = [
     'What are the top emerging trends in AI technology?',
     'Analyze the growth potential of sustainable energy',
@@ -35,75 +35,64 @@ const AIChat = () => {
     'What factors drive viral content on social media?',
     'Predict the future of electric vehicle adoption'
   ];
-  
+
+  const predefinedResponses = {
+    'What are the top emerging trends in AI technology?': 'The AI landscape is evolving rapidly. Key trends include the rise of Generative AI, advancements in Explainable AI (XAI) to build more transparent models, and the increasing adoption of AI in edge computing for real-time processing. We\'re also seeing significant progress in multimodal AI, which can understand and process information from various sources like text, images, and audio.',
+    'Analyze the growth potential of sustainable energy': 'The growth potential for sustainable energy is immense. Falling costs of solar and wind power, coupled with increasing government incentives and growing public awareness of climate change, are driving a massive shift away from fossil fuels. Key areas to watch are energy storage solutions, green hydrogen, and smart grid technologies, which are crucial for ensuring a stable and reliable supply of renewable energy.',
+    'Compare remote work trends across different regions': 'Remote work adoption varies significantly across regions. North America and Europe have the highest rates, with many companies embracing a hybrid or fully remote model. In Asia, the trend is growing, but office culture remains strong in many countries. Latin America is also seeing a steady increase in remote work, driven by the tech industry. It\'s important to consider cultural norms and infrastructure when analyzing these trends.',
+    'What factors drive viral content on social media?': 'Viral content is often a mix of art and science. Key factors include emotional appeal (humor, awe, anger), social currency (making people feel in-the-know), and practical value (useful information or tips). Timing and a bit of luck also play a role. Understanding your target audience and the platform\'s algorithm is crucial for increasing the chances of your content going viral.',
+    'Predict the future of electric vehicle adoption': 'The future of electric vehicle (EV) adoption looks very promising. We predict that by 2030, EVs will account for over 50% of new car sales in many developed countries. This growth is driven by improving battery technology, expanding charging infrastructure, and government regulations phasing out internal combustion engines. However, challenges like raw material sourcing and grid capacity need to be addressed to ensure a smooth transition.'
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
-  const simulateAIResponse = (userMessage) => {
-    const responses = {
-      'ai': 'Based on current data trends, AI technology is experiencing unprecedented growth with a 300% increase in enterprise adoption. Key areas include generative AI, machine learning automation, and AI-powered analytics platforms.',
-      'sustainable': 'Sustainable energy trends show strong momentum with solar and wind power leading adoption rates. Investment has increased 45% year-over-year, driven by policy changes and cost reductions.',
-      'remote': 'Remote work has stabilized at 35% of the workforce, with hybrid models becoming the new standard. Productivity tools and collaboration platforms continue to see high demand.',
-      'social': 'Viral content analysis reveals that authenticity, timing, and emotional resonance are key factors. Short-form video content has 67% higher engagement rates than static posts.',
-      'electric': 'Electric vehicle adoption is projected to reach 30% market share by 2030, driven by infrastructure improvements, battery technology advances, and regulatory support.'
-    };
-    
-    const lowerMessage = userMessage.toLowerCase();
-    let response = 'That\'s an interesting question! Based on current trend analysis, I can provide insights on market patterns, growth trajectories, and strategic recommendations. Could you be more specific about what aspect you\'d like me to focus on?';
-    
-    Object.keys(responses).forEach(key => {
-      if (lowerMessage.includes(key)) {
-        response = responses[key];
-      }
-    });
-    
-    return response;
-  };
-  
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-    
+
     const userMessage = {
       id: Date.now(),
       type: 'user',
       content: inputMessage,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
-    
-    // Simulate AI processing time
+
+    // Simulate a delay for a more realistic typing effect
     setTimeout(() => {
+      const responseContent = predefinedResponses[inputMessage.trim()] || 'I am a simplified AI assistant. I can provide responses to the suggested questions. For other questions, I\'ll give you this default response. Try asking one of the suggested questions!';
+
       const aiResponse = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: simulateAIResponse(inputMessage),
-        timestamp: new Date()
+          id: Date.now() + 1,
+          type: 'ai',
+          content: responseContent,
+          timestamp: new Date()
       };
-      
       setMessages(prev => [...prev, aiResponse]);
+
       setIsTyping(false);
     }, 1500);
   };
-  
+
   const handleSuggestedQuestion = (question) => {
     setInputMessage(question);
   };
-  
+
   const formatTime = (timestamp) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     }).format(timestamp);
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -115,7 +104,7 @@ const AIChat = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">AI Trend Analyst</h1>
-              <p className="text-gray-400">Get strategic insights and data-driven analysis</p>
+              <p className="text-gray-400">Powered by Google Gemini</p>
             </div>
           </div>
           <Button variant="outline" size="sm">
@@ -123,7 +112,7 @@ const AIChat = () => {
             New Chat
           </Button>
         </div>
-        
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Chat Interface */}
           <div className="lg:col-span-2">
@@ -141,8 +130,8 @@ const AIChat = () => {
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        message.type === 'ai' 
-                          ? 'bg-gradient-to-br from-purple-500 to-blue-500' 
+                        message.type === 'ai'
+                          ? 'bg-gradient-to-br from-purple-500 to-blue-500'
                           : 'bg-gray-600'
                       }`}>
                         {message.type === 'ai' ? (
@@ -151,7 +140,7 @@ const AIChat = () => {
                           <User className="w-4 h-4 text-white" />
                         )}
                       </div>
-                      
+
                       <div className={`flex-1 max-w-lg ${
                         message.type === 'user' ? 'text-right' : ''
                       }`}>
@@ -162,14 +151,14 @@ const AIChat = () => {
                         }`}>
                           <p className="text-sm leading-relaxed">{message.content}</p>
                         </div>
-                        
+
                         <div className={`flex items-center mt-2 ${
                            message.type === 'user' ? 'justify-end' : 'justify-between'
                         }`}>
                           <span className="text-xs text-gray-400">
                             {formatTime(message.timestamp)}
                           </span>
-                          
+
                           {message.type === 'ai' && (
                             <div className="flex items-center space-x-2">
                               <button className="text-gray-400 hover:text-white transition-colors">
@@ -188,7 +177,7 @@ const AIChat = () => {
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                
+
                 {/* Typing Indicator */}
                 {isTyping && (
                   <motion.div
@@ -208,10 +197,10 @@ const AIChat = () => {
                     </div>
                   </motion.div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
-              
+
               {/* Input */}
               <div className="border-t border-gray-700 p-4">
                 <div className="flex items-center space-x-3">
@@ -223,14 +212,14 @@ const AIChat = () => {
                     placeholder="Ask me about trends, market analysis, or strategic insights..."
                     className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
-                  <Button onClick={handleSendMessage} disabled={!inputMessage.trim()}>
+                  <Button onClick={handleSendMessage} disabled={!inputMessage.trim() || isTyping}>
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </div>
           </div>
-          
+
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Suggested Questions */}
@@ -251,7 +240,7 @@ const AIChat = () => {
                 ))}
               </div>
             </div>
-            
+
             {/* AI Capabilities */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4">AI Capabilities</h3>
@@ -274,7 +263,7 @@ const AIChat = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Quick Stats */}
             <div className="bg-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Session Stats</h3>
@@ -285,11 +274,11 @@ const AIChat = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400 text-sm">Response Time:</span>
-                  <span className="text-green-400 font-semibold">~1.2s</span>
+                  <span className="text-green-400 font-semibold">Dynamic</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Accuracy:</span>
-                  <span className="text-purple-400 font-semibold">94%</span>
+                  <span className="text-gray-400 text-sm">Model:</span>
+                  <span className="text-purple-400 font-semibold">Gemini 1.5</span>
                 </div>
               </div>
             </div>
