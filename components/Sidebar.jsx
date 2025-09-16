@@ -11,11 +11,13 @@ import {
   Settings, 
   TrendingUp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Landmark
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+  { to: '/markets', icon: <Landmark size={20} />, label: 'Markets' },
   { to: '/radar', icon: <Radar size={20} />, label: 'Trend Radar' },
   { to: '/comparison', icon: <GitCompare size={20} />, label: 'Keyword Comparison' },
   { to: '/map', icon: <Map size={20} />, label: 'Regional Map' },

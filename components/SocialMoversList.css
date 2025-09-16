@@ -1,0 +1,72 @@
+.social-movers-list {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.list-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #E5E7EB;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(31, 41, 55, 0.4);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.mover-item:hover {
+  background: rgba(31, 41, 55, 0.7);
+}
+
+.rank {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #9CA3AF;
+}
+
+.symbol {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #F3F4F6;
+}
+
+.momentum-score {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: bold;
+}
+
+.momentum-score.positive {
+  color: #48BB78; /* Green */
+}
+
+.momentum-score.negative {
+  color: #F56565; /* Red */
+}
+
+.social-movers-list.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}

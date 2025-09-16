@@ -1,13 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Send, Bot, User, Sparkles, TrendingUp, BarChart3, Lightbulb, Copy, ThumbsUp, ThumbsDown, RefreshCw, Search, Bell, ArrowLeft, Bookmark, Globe
+  Send, Bot, User, Sparkles, TrendingUp, BarChart3, Lightbulb, Copy, ThumbsUp, ThumbsDown, RefreshCw
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
-import CommandPalette from '../components/CommandPalette';
-import NotificationPanel from '../components/NotificationPanel';
 import { db } from '../src/firebaseConfig';
 import { ref, onValue } from 'firebase/database';
 
@@ -20,9 +16,6 @@ const AIChat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [trends, setTrends] = useState([]);
 
   const suggestedQuestions = [
@@ -55,17 +48,6 @@ const AIChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setIsCommandPaletteOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -85,146 +67,120 @@ const AIChat = () => {
   const formatTime = (timestamp) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' }).format(timestamp);
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white overflow-hidden">
-      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} trends={trends} />
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
-
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-
-      <main className={`flex-1 p-6 sm:p-8 transition-all duration-300 ease-in-out z-10`} style={{ marginLeft: isSidebarCollapsed ? '80px' : '256px' }}>
-        <div className="w-full max-w-7xl mx-auto">
-          <header className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex-1">
-                <Button variant="outline" className="w-full max-w-lg justify-start text-gray-400" onClick={() => setIsCommandPaletteOpen(true)}>
-                  <Search className="w-5 h-5 mr-3" />
-                  Search trends...
-                  <kbd className="ml-auto hidden sm:flex items-center text-xs bg-white/10 px-2 py-1 rounded">⌘K</kbd>
-                </Button>
-              </div>
-              <div className="relative">
-                <Button variant="ghost" size="icon" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
-                  <Bell className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-                  <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-950"></span>
-                </Button>
-                <NotificationPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
-              </div>
+    <div className="w-full max-w-7xl mx-auto">
+        <header className="mb-8">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg-purple-500/30">
+                <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg-purple-500/30">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">AI Trend Analyst</h1>
-                  <p className="text-gray-400">Powered by Google Gemini</p>
-                </div>
-              </div>
-              <Button onClick={() => setMessages(messages.slice(0, 1))}><RefreshCw className="w-4 h-4 mr-2" />New Chat</Button>
+            <div>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">AI Trend Analyst</h1>
+                <p className="text-gray-400">Powered by Google Gemini</p>
             </div>
-          </header>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl flex flex-col h-[650px]">
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  <AnimatePresence>
-                    {messages.map((message) => (
-                      <motion.div
-                        key={message.id}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`flex items-start space-x-4 ${
-                          message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                        }`}>
-                        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
-                          message.type === 'ai'
-                            ? 'bg-gradient-to-br from-purple-600 to-pink-500'
-                            : 'bg-white/10'
-                        }`}>
-                          {message.type === 'ai' ? <Bot className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
-                        </div>
-                        <div className={`max-w-xl ${message.type === 'user' ? 'text-right' : ''}`}>
-                          <div className={`relative rounded-xl p-4 ${
-                            message.type === 'ai'
-                              ? 'bg-black/20 border border-white/10'
-                              : 'bg-purple-600/50 border border-purple-500/50'
-                          }`}>
-                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                          </div>
-                          <div className={`flex items-center mt-2 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <span className="text-xs text-gray-500 mr-4">{formatTime(message.timestamp)}</span>
-                            {message.type === 'ai' && (
-                              <div className="flex items-center space-x-2">
-                                <button className="text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
-                                <button className="text-gray-500 hover:text-green-400"><ThumbsUp className="w-3 h-3" /></button>
-                                <button className="text-gray-500 hover:text-red-400"><ThumbsDown className="w-3 h-3" /></button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  {isTyping && (
-                    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center shadow-md">
-                        <Bot className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="bg-black/20 border border-white/10 rounded-xl p-4">
-                        <div className="flex space-x-1.5">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-                <div className="border-t border-white/10 p-4">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder="Ask me about trends, market analysis, or strategic insights..."
-                      className="w-full bg-black/40 border border-white/10 rounded-lg pl-4 pr-14 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                    />
-                    <Button size="icon" className="absolute right-2 top-1/2 -translate-y-1/2" onClick={handleSendMessage} disabled={!inputMessage.trim() || isTyping}>
-                      <Send className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            <div className="space-y-6">
-              <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center"><Lightbulb className="w-5 h-5 mr-2 text-yellow-400" />Suggested Questions</h3>
-                <div className="space-y-2">
-                  {suggestedQuestions.map((q, i) => (
-                    <button key={i} onClick={() => setInputMessage(q)} className="w-full text-left p-3 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-colors">
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">AI Capabilities</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center"><TrendingUp className="w-4 h-4 mr-3 text-green-400" /><span className="text-gray-300">Trend Analysis</span></div>
-                  <div className="flex items-center"><BarChart3 className="w-4 h-4 mr-3 text-blue-400" /><span className="text-gray-300">Data Insights</span></div>
-                  <div className="flex items-center"><Sparkles className="w-4 h-4 mr-3 text-purple-400" /><span className="text-gray-300">Predictions</span></div>
-                  <div className="flex items-center"><Lightbulb className="w-4 h-4 mr-3 text-yellow-400" /><span className="text-gray-300">Strategic Advice</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <Button onClick={() => setMessages(messages.slice(0, 1))}><RefreshCw className="w-4 h-4 mr-2" />New Chat</Button>
         </div>
-      </main>
+        </header>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+            <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl flex flex-col h-[650px]">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <AnimatePresence>
+                {messages.map((message) => (
+                    <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex items-start space-x-4 ${
+                        message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                    }`}>
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                        message.type === 'ai'
+                        ? 'bg-gradient-to-br from-purple-600 to-pink-500'
+                        : 'bg-white/10'
+                    }`}>
+                        {message.type === 'ai' ? <Bot className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+                    </div>
+                    <div className={`max-w-xl ${message.type === 'user' ? 'text-right' : ''}`}>
+                        <div className={`relative rounded-xl p-4 ${
+                        message.type === 'ai'
+                            ? 'bg-black/20 border border-white/10'
+                            : 'bg-purple-600/50 border border-purple-500/50'
+                        }`}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                        </div>
+                        <div className={`flex items-center mt-2 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <span className="text-xs text-gray-500 mr-4">{formatTime(message.timestamp)}</span>
+                        {message.type === 'ai' && (
+                            <div className="flex items-center space-x-2">
+                            <button className="text-gray-500 hover:text-white"><Copy className="w-3 h-3" /></button>
+                            <button className="text-gray-500 hover:text-green-400"><ThumbsUp className="w-3 h-3" /></button>
+                            <button className="text-gray-500 hover:text-red-400"><ThumbsDown className="w-3 h-3" /></button>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+                    </motion.div>
+                ))}
+                </AnimatePresence>
+                {isTyping && (
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center shadow-md">
+                    <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="bg-black/20 border border-white/10 rounded-xl p-4">
+                    <div className="flex space-x-1.5">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                    </div>
+                    </div>
+                </motion.div>
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+            <div className="border-t border-white/10 p-4">
+                <div className="relative">
+                <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask me about trends, market analysis, or strategic insights..."
+                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-4 pr-14 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                />
+                <Button size="icon" className="absolute right-2 top-1/2 -translate-y-1/2" onClick={handleSendMessage} disabled={!inputMessage.trim() || isTyping}>
+                    <Send className="w-5 h-5" />
+                </Button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div className="space-y-6">
+            <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center"><Lightbulb className="w-5 h-5 mr-2 text-yellow-400" />Suggested Questions</h3>
+            <div className="space-y-2">
+                {suggestedQuestions.map((q, i) => (
+                <button key={i} onClick={() => setInputMessage(q)} className="w-full text-left p-3 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-colors">
+                    {q}
+                </button>
+                ))}
+            </div>
+            </div>
+            <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">AI Capabilities</h3>
+            <div className="space-y-3 text-sm">
+                <div className="flex items-center"><TrendingUp className="w-4 h-4 mr-3 text-green-400" /><span className="text-gray-300">Trend Analysis</span></div>
+                <div className="flex items-center"><BarChart3 className="w-4 h-4 mr-3 text-blue-400" /><span className="text-gray-300">Data Insights</span></div>
+                <div className="flex items-center"><Sparkles className="w-4 h-4 mr-3 text-purple-400" /><span className="text-gray-300">Predictions</span></div>
+                <div className="flex items-center"><Lightbulb className="w-4 h-4 mr-3 text-yellow-400" /><span className="text-gray-300">Strategic Advice</span></div>
+            </div>
+            </div>
+        </div>
+        </div>
     </div>
   );
 };

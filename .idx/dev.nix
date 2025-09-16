@@ -1,32 +1,41 @@
 { pkgs, ... }: {
-  channel = "stable-24.05";
-  packages = [
-    pkgs.nodejs_20
-    pkgs.nodePackages.vite
-    pkgs.git
-    pkgs.firebase-tools
-    pkgs.google-cloud-sdk
-  ];
-  # Environment variables for the workspace
+  channel = "stable-24.05"; # For consistency
+
+  # Use the latest stable nodejs
+  packages = [ pkgs.nodejs_20 ];
+
+  # Set environment variables
   env = {
-    PROJECT_ID = "trendtracker-48f9a";
-    LOCATION = "us-central1";
-    # Set the path to the service account credentials file.
-    # This is used by the Google Cloud client library to authenticate.
-    GOOGLE_APPLICATION_CREDENTIALS = "serviceAccountKey.json";
+    # Add your environment variables here
   };
+
   idx = {
-    extensions = ["dbaeumer.vscode-eslint"];
+    # VS Code extensions
+    extensions = [
+      "vscodevim.vim"
+      "dbaeumer.vscode-eslint"
+    ];
+
     workspace = {
-      onCreate = {npm-install = "npm install";};
+      # Commands to run when the workspace is created
+      onCreate = {
+        install-deps = "npm install --legacy-peer-deps"; # Use legacy peer dependency resolution to avoid conflicts
+      };
+
+      # Commands to run when the workspace is started
       onStart = {
-        dev-server = "npm run dev";
-        backend-service = "npm run start:backend > backend.log 2>&1";
+        # Start the backend server
+        start-backend = "npm run start:backend";
+        # Start the frontend dev server
+        start-frontend = "npm run dev";
       };
     };
+
+    # Previews
     previews = {
       enable = true;
       previews = {
+        # The web preview
         web = {
           command = ["npm" "run" "dev" "--" "--port" "$PORT"];
           manager = "web";

@@ -22,12 +22,10 @@ const GoogleTrends = () => {
     const fetchTrends = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:3001/api/daily-trends');
-        // The API returns data for today, so we get the first item
-        const todaysTrends = response.data.trending_searches[0]?.searches || [];
-        setTrends(todaysTrends);
+        const response = await axios.get('/api/daily-trends');
+        setTrends(response.data); // Directly use the response data
       } catch (err) {
-        setError('Could not fetch trends. Please check your API key and try again.');
+        setError('Could not fetch trends. Please try again later.');
         console.error('Fetch error:', err);
       } finally {
         setLoading(false);
@@ -57,7 +55,7 @@ const GoogleTrends = () => {
           Today's<span className="text-indigo-400"> Trending Searches</span>
         </h1>
         <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-          Discover what the world is searching for right now, powered by Google Trends and SerpApi.
+          Discover what the world is searching for right now, powered by Google Trends.
         </p>
       </header>
 
@@ -87,12 +85,11 @@ const GoogleTrends = () => {
               variants={cardVariants}
               className="bg-gray-800/60 rounded-xl overflow-hidden shadow-lg hover:shadow-indigo-500/30 transition-shadow duration-300 border border-gray-700/50"
             >
-              <img src={trend.image_url} alt={trend.title} className="w-full h-40 object-cover" />
               <div className="p-5">
-                <h3 className="text-lg font-bold text-gray-100 truncate">{trend.title}</h3>
-                <p className="text-gray-400 text-sm mt-1">{trend.subtitle}</p>
+                <h3 className="text-lg font-bold text-gray-100 truncate">{trend.keyword}</h3>
+                <p className="text-gray-400 text-sm mt-1">{trend.volume} searches</p>
                 <a
-                  href={`https://trends.google.com/trends/explore?q=${encodeURIComponent(trend.query)}`}
+                  href={`https://trends.google.com/trends/explore?q=${encodeURIComponent(trend.keyword)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex items-center text-indigo-400 hover:text-indigo-300 transition-colors duration-300"

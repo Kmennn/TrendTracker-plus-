@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Users, Settings, Database, Activity, Shield, AlertTriangle, TrendingUp, BarChart3, Server,
-  Eye, Edit, Trash2, Plus, Search, Filter, Download, Loader, Bell
+  Eye, Edit, Trash2, Plus, Search, Filter, Download, Loader
 } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
-import CommandPalette from '../components/CommandPalette';
-import NotificationPanel from '../components/NotificationPanel';
 import { db } from '../src/firebaseConfig';
 import { ref, onValue } from 'firebase/database';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [users, setUsers] = useState([]);
+  const [trends, setTrends] = useState([]);
   const [systemStats, setSystemStats] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,25 +20,13 @@ const AdminPanel = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [trends, setTrends] = useState([]);
-
+  
   useEffect(() => {
     const trendsRef = ref(db, 'trends');
     onValue(trendsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) setTrends(Object.keys(data).map(key => ({ id: key, ...data[key] })));
+        const data = snapshot.val();
+        if (data) setTrends(Object.keys(data).map(key => ({ id: key, ...data[key] })));
     });
-
-    const handleKeyDown = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setIsCommandPaletteOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
     
     setTimeout(() => {
       setUsers([
@@ -57,8 +43,6 @@ const AdminPanel = () => {
       ]);
       setLoading(false);
     }, 1000);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleSaveChanges = () => alert('Settings saved!');
@@ -218,59 +202,36 @@ const AdminPanel = () => {
   );
 
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-gray-950"><Loader className="w-12 h-12 text-purple-500 animate-spin" /><p className="ml-4 text-lg text-white">Loading Admin Panel...</p></div>;
-
+  
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white overflow-hidden">
-      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} trends={trends} />
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
-
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-
-      <main className={`flex-1 p-6 sm:p-8 transition-all duration-300 ease-in-out z-10`} style={{ marginLeft: isSidebarCollapsed ? '80px' : '256px' }}>
-        <div className="w-full max-w-7xl mx-auto">
-          <header className="mb-8">
-             <div className="flex justify-between items-center mb-6">
-              <div className="flex-1">
-                <Button variant="outline" className="w-full max-w-lg justify-start text-gray-400" onClick={() => setIsCommandPaletteOpen(true)}>
-                  <Search className="w-5 h-5 mr-3" />
-                  Search users, settings...
-                  <kbd className="ml-auto hidden sm:flex items-center text-xs bg-white/10 px-2 py-1 rounded">⌘K</kbd>
-                </Button>
-              </div>
-              <div className="relative">
-                <Button variant="ghost" size="icon" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}><Bell className="w-6 h-6 text-gray-400 hover:text-white" /><span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-950"></span></Button>
-                <NotificationPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
+    <div className="w-full max-w-7xl mx-auto">
+        <header className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+            <div className="flex-1">
                 <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 mb-1">Admin Panel</h1>
                 <p className="text-gray-400 text-lg">Manage users, monitor system health, and configure settings</p>
-              </div>
-              <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export Logs</Button>
             </div>
-          </header>
+            <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export Logs</Button>
+            </div>
+        </header>
 
-          <div className="mb-8">
+        <div className="mb-8">
             <div className="flex space-x-1 bg-black/30 backdrop-blur-sm border border-white/10 p-1 rounded-lg">
-              {tabs.map((tab) => (
+                {tabs.map((tab) => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab !== tab.id ? 'text-gray-400 hover:text-white' : ''}`}>
-                  {activeTab === tab.id && <motion.div layoutId="active-admin-tab" className="absolute inset-0 bg-white/10 rounded-md" />}
-                  <div className="relative z-10 flex items-center justify-center space-x-2"><tab.icon className="w-4 h-4" /><span>{tab.label}</span></div>
+                    {activeTab === tab.id && <motion.div layoutId="active-admin-tab" className="absolute inset-0 bg-white/10 rounded-md" />}
+                    <div className="relative z-10 flex items-center justify-center space-x-2"><tab.icon className="w-4 h-4" /><span>{tab.label}</span></div>
                 </button>
-              ))}
+                ))}
             </div>
-          </div>
+        </div>
 
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'users' && renderUsers()}
             {activeTab === 'system' && renderSystemHealth()}
             {activeTab === 'settings' && renderSettings()}
-          </motion.div>
-        </div>
-      </main>
+        </motion.div>
     </div>
   );
 };

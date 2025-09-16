@@ -6,6 +6,7 @@ import { ref, onValue } from 'firebase/database';
 import { TrendingUp, Bookmark, Share2, Download, MessageCircle, ExternalLink, Calendar, Globe, Tag } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import Button from '../components/Button';
+import CorrelatedChart from '../components/CorrelatedChart'; // Import the new chart component
 
 const TrendDetails = () => {
   const { id } = useParams();
@@ -53,7 +54,7 @@ const TrendDetails = () => {
         });
 
         setComments([
-          { id: 1, user: 'AI Analyst', avatar: 'https://ui-avatars.com/api/?name=AI+Analyst&background=6366f1&color=fff', comment: `The trend of ${data.keyword} is showing significant promise.`, time: '2 hours ago' },
+          { id: 1, user: 'AI Analyst', avatar: '/api/avatars?name=AI+Analyst', comment: `The trend of ${data.keyword} is showing significant promise.`, time: '2 hours ago' },
         ]);
       }
       setIsLoading(false);
@@ -67,7 +68,7 @@ const TrendDetails = () => {
       const comment = {
         id: comments.length + 1,
         user: 'Current User',
-        avatar: 'https://ui-avatars.com/api/?name=Current+User&background=f59e0b&color=fff',
+        avatar: '/api/avatars?name=Current+User',
         comment: newComment,
         time: 'Just now'
       };
@@ -185,6 +186,15 @@ const TrendDetails = () => {
                   <Line type="monotone" dataKey="volume" stroke="#3B82F6" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
+            </motion.div>
+
+            {/* --- NEW: Correlated View Chart --- */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <CorrelatedChart key={trend.id} symbol={trend.keyword} />
             </motion.div>
 
             {/* Maturity Radar */}

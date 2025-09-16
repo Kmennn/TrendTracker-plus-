@@ -1,0 +1,54 @@
+.stock-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.stock-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.stock-card.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a0aec0;
+}
+
+.symbol {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.change-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.stock-card.positive .price,
+.stock-card.positive .change,
+.stock-card.positive .percent-change {
+  color: #48bb78; /* Green */
+}
+
+.stock-card.negative .price,
+.stock-card.negative .change,
+.stock-card.negative .percent-change {
+  color: #f56565; /* Red */
+}

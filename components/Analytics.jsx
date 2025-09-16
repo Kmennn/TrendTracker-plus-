@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Instagram, TrendingUp, Twitter } from 'lucide-react';
 import Chart from './Chart';
 import StatCard from './StatCard';
-import DashboardGlobe from './DashboardGlobe';
+import Globe from './Globe';
 import AnimatedNumber from './AnimatedNumber';
 import './Analytics.css';
 
@@ -44,11 +44,11 @@ const Analytics = () => {
             Create and analyze trend lists with advanced metrics that track engagement across platforms. Our tools are built for content creators and social media professionals.
           </motion.p>
 
-          <div className="relative mb-8 flex items-center justify-center" style={{ minHeight: '320px' }}>
-            <div className="absolute inset-0 z-0">
-              <DashboardGlobe />
+          <div className="relative mb-8 grid place-items-center" style={{ minHeight: '320px' }}>
+            <div className="col-start-1 row-start-1">
+                <Globe />
             </div>
-            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+            <div className="relative z-10 col-start-1 row-start-1 flex flex-col items-center justify-center text-center">
               <motion.h1
                 variants={itemVariants}
                 className="text-7xl font-bold text-white mb-2 glowing-text"

@@ -50,9 +50,10 @@ export const AuthProvider = ({ children }) => {
     return new Promise(resolve => {
       setTimeout(() => {
         const loggedInUser = {
+          uid: `user_${new Date().getTime()}`,
           name: 'John Doe',
           email: email,
-          avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=8b5cf6&color=fff',
+          avatar: '/avatar.png',
           role: 'Admin',
         };
         setUser(loggedInUser);
@@ -68,9 +69,10 @@ export const AuthProvider = ({ children }) => {
     return new Promise(resolve => {
       setTimeout(() => {
         const signedUpUser = {
+          uid: `user_${new Date().getTime()}`,
           name: name,
           email: email,
-          avatar: `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=8b5cf6&color=fff`,
+          avatar: '/avatar.png',
           role: 'User',
         };
         setUser(signedUpUser);
