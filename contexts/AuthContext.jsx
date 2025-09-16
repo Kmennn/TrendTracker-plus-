@@ -10,27 +10,28 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On initial load, try to get the user from localStorage
   useEffect(() => {
     setLoading(true);
     try {
       const storedUser = localStorage.getItem('user');
-      // Add a specific check to ensure the stored value is valid JSON and not '[object Object]'
-      if (storedUser && storedUser !== '[object Object]') {
-        setUser(JSON.parse(storedUser));
-      } else if (storedUser) {
-        // If the stored value is invalid, remove it.
-        localStorage.removeItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && typeof parsedUser === 'object' && parsedUser.name) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       }
     } catch (error) {
-      console.error('Failed to parse user from localStorage', error);
-      localStorage.removeItem('user'); // Clear corrupted data on parsing error
+      console.error('AuthContext: Corrupted user data in localStorage, clearing.', error);
+      localStorage.removeItem('user');
+      setUser(null);
     } finally {
       setLoading(false);
     }
   }, []);
-  
-  // When user state changes, update localStorage
+
   useEffect(() => {
     try {
       if (user) {
@@ -42,7 +43,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Failed to save user to localStorage', error);
     }
   }, [user]);
-
 
   const login = (email, password) => {
     console.log('Logging in with:', { email, password });
@@ -84,10 +84,10 @@ export const AuthProvider = ({ children }) => {
     console.log('Logging out');
     setUser(null);
   };
-  
+
   const updateProfile = (profileData) => {
-    setUser(prevUser => ({...prevUser, ...profileData}));
-  }
+    setUser(prevUser => ({ ...prevUser, ...profileData }));
+  };
 
   const value = {
     user,
@@ -98,7 +98,6 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
   };
 
-  // Render children only when not loading
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}

@@ -1,25 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Settings, 
-  Database, 
-  Activity, 
-  Shield, 
-  AlertTriangle,
-  TrendingUp,
-  BarChart3,
-  Server,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Loader
+import {
+  Users, Settings, Database, Activity, Shield, AlertTriangle, TrendingUp, BarChart3, Server,
+  Eye, Edit, Trash2, Plus, Search, Filter, Download, Loader, Bell
 } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
+import CommandPalette from '../components/CommandPalette';
+import NotificationPanel from '../components/NotificationPanel';
+import { db } from '../src/firebaseConfig';
+import { ref, onValue } from 'firebase/database';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -32,398 +22,255 @@ const AdminPanel = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [trends, setTrends] = useState([]);
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    console.log('Search query:', e.target.value);
-  };
-
-  const handleSaveChanges = () => {
-    console.log('Saving settings:', { apiRateLimit, sessionTimeout, emailNotifications, maintenanceMode });
-    alert('Settings saved!');
-  };
-  
   useEffect(() => {
-    // Simulate data loading to prevent render errors
-    const fetchData = () => {
-      setTimeout(() => {
-        setUsers([
-          { id: 1, name: 'John Smith', email: 'john@example.com', role: 'Admin', status: 'active', lastLogin: new Date(Date.now() - 3600000) },
-          { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: 'Analyst', status: 'active', lastLogin: new Date(Date.now() - 7200000) },
-          { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: 'Viewer', status: 'inactive', lastLogin: new Date(Date.now() - 86400000) },
-          { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: 'Analyst', status: 'active', lastLogin: new Date(Date.now() - 1800000) }
-        ]);
-        
-        setSystemStats({
-          totalUsers: 247,
-          activeUsers: 189,
-          totalTrends: 1543,
-          apiCalls: 45672,
-          storageUsed: '2.4 TB',
-          uptime: '99.8%'
-        });
-        
-        setAlerts([
-          { id: 1, type: 'warning', message: 'High API usage detected', timestamp: new Date(Date.now() - 1800000) },
-          { id: 2, type: 'info', message: 'System backup completed successfully', timestamp: new Date(Date.now() - 3600000) },
-          { id: 3, type: 'error', message: 'Failed to sync external data source', timestamp: new Date(Date.now() - 7200000) }
-        ]);
+    const trendsRef = ref(db, 'trends');
+    onValue(trendsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setTrends(Object.keys(data).map(key => ({ id: key, ...data[key] })));
+    });
 
-        setLoading(false);
-      }, 1000);
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
     };
+    window.addEventListener('keydown', handleKeyDown);
+    
+    setTimeout(() => {
+      setUsers([
+        { id: 1, name: 'John Smith', email: 'john@example.com', role: 'Admin', status: 'active', lastLogin: new Date(Date.now() - 3600000) },
+        { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: 'Analyst', status: 'active', lastLogin: new Date(Date.now() - 7200000) },
+        { id: 3, name: 'Mike Chen', email: 'mike@example.com', role: 'Viewer', status: 'inactive', lastLogin: new Date(Date.now() - 86400000) },
+        { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: 'Analyst', status: 'active', lastLogin: new Date(Date.now() - 1800000) }
+      ]);
+      setSystemStats({ totalUsers: 247, activeUsers: 189, totalTrends: 1543, apiCalls: 45672, storageUsed: '2.4 TB', uptime: '99.8%' });
+      setAlerts([
+        { id: 1, type: 'warning', message: 'High API usage detected', timestamp: new Date(Date.now() - 1800000) },
+        { id: 2, type: 'info', message: 'System backup completed successfully', timestamp: new Date(Date.now() - 3600000) },
+        { id: 3, type: 'error', message: 'Failed to sync external data source', timestamp: new Date(Date.now() - 7200000) }
+      ]);
+      setLoading(false);
+    }, 1000);
 
-    fetchData();
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-  
+
+  const handleSaveChanges = () => alert('Settings saved!');
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'system', label: 'System Health', icon: Server },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
-  
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'inactive': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-      case 'suspended': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
+
+  const getStatusPill = (status) => {
+    const styles = {
+      active: 'bg-green-500/10 text-green-300 border-green-500/20',
+      inactive: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+      suspended: 'bg-red-500/10 text-red-400 border-red-500/20'
+    };
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.inactive}`}>{status}</span>;
   };
-  
-  const getAlertColor = (type) => {
-    switch (type) {
-      case 'error': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'warning': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'info': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
+
+  const getAlertPill = (type) => {
+    const styles = {
+      error: 'bg-red-500/10 text-red-300 border-red-500/20',
+      warning: 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
+      info: 'bg-blue-500/10 text-blue-300 border-blue-500/20'
+    };
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium border ${styles[type] || styles.info}`}>{type}</span>;
   };
-  
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-  
+
+  const formatDate = (date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Stats Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Users className="w-8 h-8 text-blue-400" />
-            <span className="text-green-400 text-sm font-medium">+12%</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.totalUsers}</h3>
-          <p className="text-gray-400">Total Users</p>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Activity className="w-8 h-8 text-green-400" />
-            <span className="text-green-400 text-sm font-medium">+8%</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.activeUsers}</h3>
-          <p className="text-gray-400">Active Users</p>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <TrendingUp className="w-8 h-8 text-purple-400" />
-            <span className="text-green-400 text-sm font-medium">+23%</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.totalTrends}</h3>
-          <p className="text-gray-400">Total Trends</p>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Database className="w-8 h-8 text-orange-400" />
-            <span className="text-yellow-400 text-sm font-medium">78%</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.storageUsed}</h3>
-          <p className="text-gray-400">Storage Used</p>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Server className="w-8 h-8 text-cyan-400" />
-            <span className="text-green-400 text-sm font-medium">{systemStats.uptime}</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.apiCalls.toLocaleString()}</h3>
-          <p className="text-gray-400">API Calls Today</p>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Shield className="w-8 h-8 text-green-400" />
-            <span className="text-green-400 text-sm font-medium">Healthy</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white">{systemStats.uptime}</h3>
-          <p className="text-gray-400">System Uptime</p>
-        </div>
+        {[ { icon: Users, title: 'Total Users', value: systemStats.totalUsers, change: '+12%', color: 'blue' }, { icon: Activity, title: 'Active Users', value: systemStats.activeUsers, change: '+8%', color: 'green' }, { icon: TrendingUp, title: 'Total Trends', value: systemStats.totalTrends, change: '+23%', color: 'purple' }, { icon: Database, title: 'Storage Used', value: systemStats.storageUsed, change: '78%', color: 'orange' }, { icon: Server, title: 'API Calls Today', value: systemStats.apiCalls.toLocaleString(), change: '99.8%', color: 'cyan' }, { icon: Shield, title: 'System Uptime', value: systemStats.uptime, change: 'Healthy', color: 'green' } ].map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <Icon className={`w-8 h-8 text-${item.color}-400`} />
+                <span className={`text-${item.change.startsWith('+') ? 'green' : 'yellow'}-400 text-sm font-medium`}>{item.change}</span>
+              </div>
+              <h3 className="text-3xl font-bold text-white">{item.value}</h3>
+              <p className="text-gray-400">{item.title}</p>
+            </motion.div>
+          );
+        })}
       </div>
-      
-      {/* Recent Alerts */}
-      <div className="bg-gray-800 rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Recent Alerts</h3>
         <div className="space-y-3">
           {alerts.map((alert) => (
-            <div key={alert.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+            <div key={alert.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
               <div className="flex items-center space-x-3">
-                <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                <AlertTriangle className={`w-5 h-5 text-${alert.type === 'error' ? 'red' : 'yellow'}-400`} />
                 <div>
                   <p className="text-white font-medium">{alert.message}</p>
                   <p className="text-gray-400 text-sm">{formatDate(alert.timestamp)}</p>
                 </div>
               </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getAlertColor(alert.type)}`}>
-                {alert.type}
-              </span>
+              {getAlertPill(alert.type)}
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
-  
+
   const renderUsers = () => (
-    <div className="space-y-6">
-      {/* User Controls */}
+    <div className="space-y-6 bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-          <Button variant="outline" size="sm" onClick={() => alert('Filter button clicked!')}>
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input type="text" placeholder="Search users..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
         </div>
-        <Button onClick={() => alert('Add User button clicked!')}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline"><Filter className="w-4 h-4 mr-2" />Filter</Button>
+          <Button><Plus className="w-4 h-4 mr-2" />Add User</Button>
+        </div>
       </div>
-      
-      {/* Users Table */}
-      <div className="bg-gray-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Last Login</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="border-b border-white/10">
+            <tr>{['User', 'Role', 'Status', 'Last Login', 'Actions'].map(h => <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">{h}</th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {users.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase())).map((user) => (
+              <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-6 py-4"><p className="text-white font-medium">{user.name}</p><p className="text-gray-400 text-sm">{user.email}</p></td>
+                <td className="px-6 py-4"><span className="text-gray-300">{user.role}</span></td>
+                <td className="px-6 py-4">{getStatusPill(user.status)}</td>
+                <td className="px-6 py-4 text-gray-300 text-sm">{formatDate(user.lastLogin)}</td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Button size="icon-sm" variant="outline"><Eye className="w-4 h-4" /></Button>
+                    <Button size="icon-sm" variant="outline"><Edit className="w-4 h-4" /></Button>
+                    <Button size="icon-sm" variant="outline" className="hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <p className="text-white font-medium">{user.name}</p>
-                      <p className="text-gray-400 text-sm">{user.email}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-gray-300">{user.role}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(user.status)}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-300 text-sm">
-                    {formatDate(user.lastLogin)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-gray-400 hover:text-white transition-colors" onClick={() => alert(`Viewing user: ${user.name}`)}>
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-400 hover:text-white transition-colors" onClick={() => alert(`Editing user: ${user.name}`)}>
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-400 hover:text-red-400 transition-colors" onClick={() => alert(`Deleting user: ${user.name}`)}>
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const renderSystemHealth = () => (
-    <div className="space-y-6">
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-gray-800 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Server Status</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400">CPU Usage:</span>
-              <span className="text-green-400">23%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Memory Usage:</span>
-              <span className="text-yellow-400">67%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Disk Usage:</span>
-              <span className="text-green-400">45%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Network I/O:</span>
-              <span className="text-green-400">Normal</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Database Status</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Connection Pool:</span>
-              <span className="text-green-400">Healthy</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Query Performance:</span>
-              <span className="text-green-400">Optimal</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Backup Status:</span>
-              <span className="text-green-400">Up to date</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Replication:</span>
-              <span className="text-green-400">Synced</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">System Configuration</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">API Rate Limit</label>
-            <input
-              type="number"
-              value={apiRateLimit}
-              onChange={(e) => setApiRateLimit(parseInt(e.target.value))}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Session Timeout (minutes)</label>
-            <input
-              type="number"
-              value={sessionTimeout}
-              onChange={(e) => setSessionTimeout(parseInt(e.target.value))}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-300">Enable Email Notifications</span>
-            <input type="checkbox" checked={emailNotifications} onChange={(e) => setEmailNotifications(e.target.checked)} className="rounded" />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-300">Maintenance Mode</span>
-            <input type="checkbox" checked={maintenanceMode} onChange={(e) => setMaintenanceMode(e.target.checked)} className="rounded" />
-          </div>
-        </div>
-        <div className="mt-6">
-          <Button onClick={handleSaveChanges}>Save Settings</Button>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader className="w-12 h-12 text-purple-500 animate-spin" />
-          <p className="text-lg text-white">Loading Admin Panel...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
-            <p className="text-gray-400">Manage users, monitor system health, and configure settings</p>
+  const renderSystemHealth = () => (
+    <div className="grid md:grid-cols-2 gap-6">
+    {[ { title: 'Server Status', stats: [ { label: 'CPU Usage', value: '23%', color: 'green' }, { label: 'Memory Usage', value: '67%', color: 'yellow' }, { label: 'Disk Usage', value: '45%', color: 'green' }, { label: 'Network I/O', value: 'Normal', color: 'green' } ] }, { title: 'Database Status', stats: [ { label: 'Connection Pool', value: 'Healthy', color: 'green' }, { label: 'Query Performance', value: 'Optimal', color: 'green' }, { label: 'Backup Status', value: 'Up to date', color: 'green' }, { label: 'Replication', value: 'Synced', color: 'green' } ] } ].map((card, i) => (
+        <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">{card.title}</h3>
+          <div className="space-y-3">
+            {card.stats.map(stat => (
+              <div key={stat.label} className="flex justify-between items-center">
+                <span className="text-gray-400">{stat.label}:</span>
+                <span className={`font-semibold text-${stat.color}-400`}>{stat.value}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => alert('Export Logs button clicked!')}>
-              <Download className="w-4 h-4 mr-2" />
-              Export Logs
-            </Button>
-          </div>
-        </div>
-        
-        {/* Tabs */}
-        <div className="flex space-x-1 mb-8 bg-gray-800 p-1 rounded-lg">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        
-        {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'users' && renderUsers()}
-          {activeTab === 'system' && renderSystemHealth()}
-          {activeTab === 'settings' && renderSettings()}
         </motion.div>
+      ))}
+    </div>
+  );
+
+  const renderSettings = () => (
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto">
+      <h3 className="text-xl font-semibold text-white mb-6">System Configuration</h3>
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">API Rate Limit (requests/min)</label>
+          <input type="number" value={apiRateLimit} onChange={(e) => setApiRateLimit(parseInt(e.target.value))} className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Session Timeout (minutes)</label>
+          <input type="number" value={sessionTimeout} onChange={(e) => setSessionTimeout(parseInt(e.target.value))} className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50" />
+        </div>
+        <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg border border-white/10">
+          <div>
+            <p className="font-medium text-white">Enable Email Notifications</p>
+            <p className="text-sm text-gray-400">Receive alerts and summaries via email.</p>
+          </div>
+          <input type="checkbox" checked={emailNotifications} onChange={(e) => setEmailNotifications(e.target.checked)} className="w-5 h-5 rounded text-purple-500 bg-black/40 border-white/20 focus:ring-purple-500/50" />
+        </div>
+        <div className="flex items-center justify-between p-4 bg-red-900/20 rounded-lg border border-red-500/30">
+          <div>
+            <p className="font-medium text-red-300">Maintenance Mode</p>
+            <p className="text-sm text-red-400/80">Temporarily disable access to the application for all users.</p>
+          </div>
+          <input type="checkbox" checked={maintenanceMode} onChange={(e) => setMaintenanceMode(e.target.checked)} className="w-5 h-5 rounded text-red-500 bg-black/40 border-white/20 focus:ring-red-500/50" />
+        </div>
       </div>
+      <div className="mt-8 flex justify-end">
+        <Button onClick={handleSaveChanges}>Save Changes</Button>
+      </div>
+    </motion.div>
+  );
+
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-gray-950"><Loader className="w-12 h-12 text-purple-500 animate-spin" /><p className="ml-4 text-lg text-white">Loading Admin Panel...</p></div>;
+
+  return (
+    <div className="flex min-h-screen bg-gray-950 text-white overflow-hidden">
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} trends={trends} />
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
+
+      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
+
+      <main className={`flex-1 p-6 sm:p-8 transition-all duration-300 ease-in-out z-10`} style={{ marginLeft: isSidebarCollapsed ? '80px' : '256px' }}>
+        <div className="w-full max-w-7xl mx-auto">
+          <header className="mb-8">
+             <div className="flex justify-between items-center mb-6">
+              <div className="flex-1">
+                <Button variant="outline" className="w-full max-w-lg justify-start text-gray-400" onClick={() => setIsCommandPaletteOpen(true)}>
+                  <Search className="w-5 h-5 mr-3" />
+                  Search users, settings...
+                  <kbd className="ml-auto hidden sm:flex items-center text-xs bg-white/10 px-2 py-1 rounded">⌘K</kbd>
+                </Button>
+              </div>
+              <div className="relative">
+                <Button variant="ghost" size="icon" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}><Bell className="w-6 h-6 text-gray-400 hover:text-white" /><span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-950"></span></Button>
+                <NotificationPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 mb-1">Admin Panel</h1>
+                <p className="text-gray-400 text-lg">Manage users, monitor system health, and configure settings</p>
+              </div>
+              <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export Logs</Button>
+            </div>
+          </header>
+
+          <div className="mb-8">
+            <div className="flex space-x-1 bg-black/30 backdrop-blur-sm border border-white/10 p-1 rounded-lg">
+              {tabs.map((tab) => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab !== tab.id ? 'text-gray-400 hover:text-white' : ''}`}>
+                  {activeTab === tab.id && <motion.div layoutId="active-admin-tab" className="absolute inset-0 bg-white/10 rounded-md" />}
+                  <div className="relative z-10 flex items-center justify-center space-x-2"><tab.icon className="w-4 h-4" /><span>{tab.label}</span></div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'users' && renderUsers()}
+            {activeTab === 'system' && renderSystemHealth()}
+            {activeTab === 'settings' && renderSettings()}
+          </motion.div>
+        </div>
+      </main>
     </div>
   );
 };
