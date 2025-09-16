@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Youtube, Instagram, Twitter, ArrowUpRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { db } from '../src/firebaseConfig';
-import { ref, query, orderByChild, equalTo, get } from 'firebase/database';
+import { Youtube, Instagram, Twitter, Facebook, Linkedin, ArrowUpRight } from 'lucide-react';
 import RadarScanner from '../components/RadarScanner';
 
 const TrendRadar = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [displayedTrends, setDisplayedTrends] = useState([]);
-  const navigate = useNavigate();
 
   const allTrends = {
     youtube: [
@@ -33,55 +29,102 @@ const TrendRadar = () => {
         { id: 'nft-community', title: '#NFTCommunity', metric: '3.5M tweets' },
         { id: 'esports', title: '#eSports', metric: '3.2M tweets' },
     ],
+    facebook: [
+        { id: 'community-gardening', title: 'Community Gardening Groups', metric: '1.2M members' },
+        { id: 'local-business', title: 'Support Local Businesses', metric: '850k members' },
+        { id: 'virtual-events', title: 'Virtual Events & Workshops', metric: '750k participants' },
+        { id: 'parenting-hacks', title: 'Parenting Hacks & Tips', metric: '650k members' },
+        { id: 'diy-crafts', title: 'DIY & Crafts', metric: '500k members' },
+    ],
+    linkedin: [
+        { id: 'remote-work', title: '#RemoteWork', metric: '15M followers' },
+        { id: 'career-development', title: '#CareerDevelopment', metric: '12M followers' },
+        { id: 'leadership', title: '#Leadership', metric: '10M followers' },
+        { id: 'artificial-intelligence', title: '#ArtificialIntelligence', metric: '8M followers' },
+        { id: 'personal-branding', title: '#PersonalBranding', metric: '7M followers' },
+    ]
   };
 
   const themes = {
     youtube: {
-        primary: 'bg-red-600',
+        primary: 'bg-gradient-to-r from-red-500 to-red-700',
         secondary: 'hover:bg-red-500/10',
         accent: 'text-red-400',
-        icon: 'text-red-500',
+        icon: 'text-red-400',
         radar: '#FF0000',
         name: 'YouTube',
-        border: 'border-red-500/30 hover:border-red-500/80'
+        border: 'border-red-500/30 hover:border-red-500/80',
+        background: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/40 via-gray-950 to-gray-950'
     },
     instagram: {
-        primary: 'bg-pink-600',
+        primary: 'bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600',
         secondary: 'hover:bg-pink-500/10',
         accent: 'text-pink-400',
-        icon: 'text-pink-500',
+        icon: 'text-purple-400',
         radar: '#E4405F',
         name: 'Instagram',
-        border: 'border-pink-500/30 hover:border-pink-500/80'
+        border: 'border-purple-500/30 hover:border-pink-500/80',
+        background: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/40 via-gray-950 to-gray-950'
     },
     twitter: {
-        primary: 'bg-blue-600',
-        secondary: 'hover:bg-blue-500/10',
-        accent: 'text-blue-400',
-        icon: 'text-blue-500',
+        primary: 'bg-gradient-to-r from-sky-400 to-sky-600',
+        secondary: 'hover:bg-sky-500/10',
+        accent: 'text-sky-400',
+        icon: 'text-sky-400',
         radar: '#1DA1F2',
         name: 'Twitter',
-        border: 'border-blue-500/30 hover:border-blue-500/80'
+        border: 'border-sky-500/30 hover:border-sky-500/80',
+        background: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/40 via-gray-950 to-gray-950'
+    },
+    facebook: {
+        primary: 'bg-gradient-to-r from-blue-600 to-blue-800',
+        secondary: 'hover:bg-blue-700/10',
+        accent: 'text-blue-400',
+        icon: 'text-blue-400',
+        radar: '#1877F2',
+        name: 'Facebook',
+        border: 'border-blue-600/30 hover:border-blue-700/80',
+        background: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-gray-950 to-gray-950'
+    },
+    linkedin: {
+        primary: 'bg-gradient-to-r from-sky-600 to-blue-800',
+        secondary: 'hover:bg-sky-600/10',
+        accent: 'text-sky-400',
+        icon: 'text-sky-400',
+        radar: '#0A66C2',
+        name: 'LinkedIn',
+        border: 'border-sky-700/30 hover:border-blue-700/80',
+        background: 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/50 via-gray-950 to-gray-950'
     },
   };
 
-  const handleTrendClick = async (item) => {
-    const trendsRef = ref(db, 'trends');
-    const q = query(trendsRef, orderByChild('keyword'), equalTo(item.title));
-    const snapshot = await get(q);
-    if (snapshot.exists()) {
-      const trendId = Object.keys(snapshot.val())[0];
-      navigate(`/trend/${trendId}`);
-    } else {
-      console.warn(`Trend not found for keyword: ${item.title}`);
-      // Fallback: Navigate to the first trend if the clicked one isn't found
-      const allTrendsRef = ref(db, 'trends');
-      const allTrendsSnapshot = await get(allTrendsRef);
-      if (allTrendsSnapshot.exists()) {
-        const allTrends = allTrendsSnapshot.val();
-        const firstTrendId = Object.keys(allTrends)[0];
-        navigate(`/trend/${firstTrendId}`);
-      }
+  const handleTrendClick = (item) => {
+    let url;
+    const title = item.title;
+
+    switch (activeTab) {
+      case 'twitter':
+        url = `https://twitter.com/search?q=${encodeURIComponent(title)}`;
+        break;
+      case 'instagram':
+        url = `https://www.instagram.com/explore/tags/${title.replace('#', '')}/`;
+        break;
+      case 'youtube':
+        url = `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`;
+        break;
+      case 'facebook':
+        url = `https://www.facebook.com/search/top/?q=${encodeURIComponent(title)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(title)}`;
+        break;
+      default:
+        console.warn('Unknown platform:', activeTab);
+        return;
+    }
+
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -99,11 +142,12 @@ const TrendRadar = () => {
     youtube: <Youtube className={`w-5 h-5 ${themes.youtube.icon}`} />,
     instagram: <Instagram className={`w-5 h-5 ${themes.instagram.icon}`} />,
     twitter: <Twitter className={`w-5 h-5 ${themes.twitter.icon}`} />,
+    facebook: <Facebook className={`w-5 h-5 ${themes.facebook.icon}`} />,
+    linkedin: <Linkedin className={`w-5 h-5 ${themes.linkedin.icon}`} />,
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(128,0,128,0.15)_0%,_rgba(0,0,0,0)_50%)]"></div>
+    <div className={`min-h-screen text-white overflow-hidden relative transition-colors duration-1000 ${activeTheme.background}`}>
       <div className="relative z-10 p-4 sm:p-6 lg:p-8">
         <motion.h1 
             className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent text-center mb-12"
