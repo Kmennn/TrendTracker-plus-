@@ -15,12 +15,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const storedUser = localStorage.getItem('user');
-      if (storedUser) {
+      // Add a specific check to ensure the stored value is valid JSON and not '[object Object]'
+      if (storedUser && storedUser !== '[object Object]') {
         setUser(JSON.parse(storedUser));
+      } else if (storedUser) {
+        // If the stored value is invalid, remove it.
+        localStorage.removeItem('user');
       }
     } catch (error) {
       console.error('Failed to parse user from localStorage', error);
-      localStorage.removeItem('user'); // Clear corrupted data
+      localStorage.removeItem('user'); // Clear corrupted data on parsing error
     } finally {
       setLoading(false);
     }

@@ -28,39 +28,45 @@ const navItems = [
 
 const Sidebar = ({ isCollapsed, toggleSidebar }) => {
   return (
-    <div 
-      className={`bg-gray-800 text-white p-4 transition-all duration-300 ease-in-out flex flex-col fixed h-full z-40`}
+    <aside 
+      className={`bg-gradient-to-b from-gray-900/70 to-gray-950/80 backdrop-blur-lg text-white p-4 transition-all duration-300 ease-in-out flex flex-col fixed h-full z-40 border-r border-white/10`}
       style={{ width: isCollapsed ? '80px' : '256px' }}
     >
-      <div className={`flex items-center mb-6 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-        {!isCollapsed && <h2 className="text-2xl font-bold">Navigation</h2>}
-        <button onClick={toggleSidebar} className="p-1 rounded-full hover:bg-gray-700">
+      <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+        {!isCollapsed && <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">TrendTraker+</h2>}
+        <button onClick={toggleSidebar} className="p-1.5 rounded-full hover:bg-white/10 transition-colors">
           {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
       
-      <nav>
+      <nav className="flex-grow">
         <ul>
           {navItems.map((item) => (
             <li key={item.to} className="mb-2">
               <NavLink 
                 to={item.to} 
                 className={({ isActive }) => 
-                  `flex items-center py-2 px-3 rounded transition-colors duration-200 ${isCollapsed ? 'justify-center' : ''} ` + 
+                  `flex items-center py-2.5 px-3 rounded-lg transition-all duration-200 group ${isCollapsed ? 'justify-center' : ''} ` + 
                   (isActive 
-                    ? 'bg-purple-600 text-white' 
-                    : 'text-gray-400 hover:bg-gray-700 hover:text-white')
+                    ? 'bg-purple-600/30 text-white shadow-lg' 
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white')
                 }
                 title={isCollapsed ? item.label : ''}
               >
-                {item.icon}
-                {!isCollapsed && <span className="ml-4">{item.label}</span>}
+                <div className="group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
+                {!isCollapsed && <span className="ml-4 font-medium">{item.label}</span>}
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
-    </div>
+
+      {!isCollapsed && (
+        <div className="p-4 bg-white/5 rounded-lg text-center">
+            <p className="text-sm text-gray-300">© 2024 TrendTraker+</p>
+        </div>
+      )}
+    </aside>
   );
 };
 
