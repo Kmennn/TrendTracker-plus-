@@ -4,7 +4,6 @@ import { Filter, Download, Search, Bell, ArrowLeft, Bookmark, Globe } from 'luci
 import { Link } from 'react-router-dom';
 import { db } from '../src/firebaseConfig';
 import { ref, onValue } from 'firebase/database';
-import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import CommandPalette from '../components/CommandPalette';
 import NotificationPanel from '../components/NotificationPanel';
@@ -19,7 +18,6 @@ const RegionalMap = () => {
   const [mapData, setMapData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [trends, setTrends] = useState([]);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -98,9 +96,7 @@ const RegionalMap = () => {
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
 
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-
-      <main className={`flex-1 p-6 sm:p-8 transition-all duration-300 ease-in-out z-10`} style={{ marginLeft: isSidebarCollapsed ? '80px' : '256px' }}>
+      <main className="flex-1 p-6 sm:p-8 z-10">
         <div className="w-full max-w-7xl mx-auto">
           <header className="mb-10">
             <div className="flex justify-between items-center mb-6">

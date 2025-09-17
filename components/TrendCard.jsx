@@ -71,8 +71,7 @@ const TrendCard = ({ trend }) => {
     <>
       <motion.div
         whileHover={{ y: -5, scale: 1.02 }}
-        className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-purple-400/50 transition-all duration-300 cursor-pointer group"
-        onClick={() => navigate(`/trend/${trend.id}`)}
+        className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-purple-400/50 transition-all duration-300 group"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">

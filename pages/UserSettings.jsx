@@ -70,7 +70,7 @@ const UserSettings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6 ml-64">
+    <div className="w-full">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
 

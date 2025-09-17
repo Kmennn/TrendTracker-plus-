@@ -4,7 +4,6 @@ import {
   FileText, Download, Calendar, Filter, Plus, Eye, Edit, Share2, Clock, TrendingUp,
   BarChart3, PieChart, X, CheckCircle, Trash2, Search, Bell
 } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import CommandPalette from '../components/CommandPalette';
 import NotificationPanel from '../components/NotificationPanel';
@@ -71,7 +70,6 @@ const ReportsModule = () => {
   const [filterType, setFilterType] = useState('all');
   const [notification, setNotification] = useState(null);
   const [newReportData, setNewReportData] = useState({ title: '', type: 'trend-analysis', description: '' });
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [trends, setTrends] = useState([]);
@@ -177,15 +175,13 @@ const ReportsModule = () => {
   const formatDate = (date) => new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} trends={trends} />
       <AnimatePresence>{notification && <Notification key={notification.id} {...notification} onClose={() => setNotification(null)} />}</AnimatePresence>
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
 
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
-
-      <main className={`flex-1 p-6 sm:p-8 transition-all duration-300 ease-in-out z-10`} style={{ marginLeft: isSidebarCollapsed ? '80px' : '256px' }}>
+      <main className="p-6 sm:p-8 z-10 w-full">
         <div className="w-full max-w-8xl mx-auto">
           <header className="mb-8">
             <div className="flex justify-between items-center mb-6">
