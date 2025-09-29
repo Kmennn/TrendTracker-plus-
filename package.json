@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -35,7 +40,8 @@
     "react-router-dom": "^7.9.1",
     "react-spring": "^10.0.1",
     "recharts": "^3.2.1",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
