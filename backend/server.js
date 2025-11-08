@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { VertexAI } from '@google-cloud/vertexai';
 import admin from 'firebase-admin';
 import cron from 'node-cron';
+import summarizeVideo from './videoSummarizer.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -30,7 +31,7 @@ const startServer = async () => {
     const fetchAndStoreStockData = async () => {
       console.log('Fetching latest stock data using Gemini...');
       try {
-        const prompt = `You are a financial data API. For the following stock symbols, provide the current market price and the percentage change since the last market close. The symbols are: ${SYMBOLS.join(', ')}. Provide the output in a single, clean, parsable JSON array. Each object in the array must correspond to a symbol and have these exact keys: "symbol", "price" (as a number), "percentChange" (as a number), and "volume" (as a string like "1.2M" or "15.3K"). Do not include any introductory text, markdown formatting, or backticks. The output should be only the raw JSON array.`;
+        const prompt = `You are a financial data API. For the following stock symbols, provide the current market price and the percentage change since the last market close. The symbols are: ${SYMBOLS.join(', ')}. Provide the output in a single, clean, parsable JSON array. Each object in the array must correspond to a symbol and have these exact keys: \"symbol\", \"price\" (as a number), \"percentChange\" (as a number), and \"volume\" (as a string like \"1.2M\" or \"15.3K\"). Do not include any introductory text, markdown formatting, or backticks. The output should be only the raw JSON array.`;
 
         const result = await generativeModel.generateContent(prompt);
         const response = result.response;
@@ -72,6 +73,24 @@ const startServer = async () => {
     });
 
     // --- API Endpoints ---
+
+    // Video Summarization Endpoint
+    app.post('/api/summarize-video', async (req, res) => {
+        const { videoUrl, prompt } = req.body;
+
+        if (!videoUrl || !prompt) {
+            return res.status(400).json({ error: 'Missing videoUrl or prompt in request body' });
+        }
+
+        try {
+            const summary = await summarizeVideo(videoUrl, prompt);
+            res.json({ summary });
+        } catch (error) {
+            console.error('Error in /api/summarize-video:', error);
+            res.status(500).json({ error: error.message || 'Failed to summarize video.' });
+        }
+    });
+
     // Get all stock data
     app.get('/api/stocks', async (req, res) => {
       try {

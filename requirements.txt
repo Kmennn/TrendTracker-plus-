@@ -1,0 +1,10 @@
+google-api-python-client
+pandas
+vaderSentiment
+scikit-learn
+opencv-python
+librosa
+xgboost
+joblib
+prophet
+matplotlib
