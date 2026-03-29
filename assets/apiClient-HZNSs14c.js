@@ -1,0 +1,2 @@
+import{a as o}from"./index-ngrFHoWO.js";import{b as t}from"./index-DDyvGg-O.js";const s=o.create({baseURL:"/api",timeout:1e4,headers:{"Content-Type":"application/json"}});s.interceptors.request.use(async e=>{if(t.currentUser){const r=await t.currentUser.getIdToken();e.headers.Authorization=`Bearer ${r}`}return e},e=>Promise.reject(e));s.interceptors.response.use(e=>e,e=>{var r;return((r=e.response)==null?void 0:r.status)===401&&console.error("Unauthorized request"),Promise.reject(e)});export{s as a};
+//# sourceMappingURL=apiClient-HZNSs14c.js.map
