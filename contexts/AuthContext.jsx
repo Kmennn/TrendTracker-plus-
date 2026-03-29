@@ -19,25 +19,49 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        // Map Firebase user to our app's user structure
-        const mappedUser = {
-          uid: currentUser.uid,
-          name: currentUser.displayName || 'User',
-          email: currentUser.email,
-          avatar: currentUser.photoURL || '/avatar.png',
-          role: 'User', // Default role for now
-        };
-        setUser(mappedUser);
-      } else {
-        setUser(null);
-      }
+    let isMounted = true;
+    const timeoutId = window.setTimeout(() => {
+      if (!isMounted) return;
+      console.warn('Firebase auth initialization timed out; rendering app without a resolved session.');
       setLoading(false);
-    });
+    }, 5000);
 
-    return unsubscribe;
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        if (!isMounted) return;
+
+        if (currentUser) {
+          const mappedUser = {
+            uid: currentUser.uid,
+            name: currentUser.displayName || 'User',
+            email: currentUser.email,
+            avatar: currentUser.photoURL || '/avatar.png',
+            role: 'User',
+          };
+          setUser(mappedUser);
+        } else {
+          setUser(null);
+        }
+
+        window.clearTimeout(timeoutId);
+        setLoading(false);
+      },
+      (error) => {
+        if (!isMounted) return;
+
+        console.error('Auth state listener failed:', error);
+        setUser(null);
+        window.clearTimeout(timeoutId);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -112,7 +136,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

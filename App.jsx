@@ -38,13 +38,23 @@ const PageLoader = () => (
 );
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 const PublicRoute = ({ children }) => {
-  const { user } = useAuth();
-  return !user ? children : <Navigate to="/dashboard" />;
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  return !user ? children : <Navigate to="/dashboard" replace />;
 };
 
 function App() {
@@ -56,7 +66,7 @@ function App() {
             <CanvasProvider>
 
             <AuthProvider>
-              <Router basename="/TrendTracker-plus-/">
+            <Router basename={import.meta.env.BASE_URL}>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Public routes */}
@@ -88,8 +98,7 @@ function App() {
           </CanvasProvider>
         </SmoothScrollProvider>
       </MotionConfigProvider>
-      {/* React Query Devtools - only in development */}
-      <ReactQueryDevtools initialIsOpen={false} />
+        {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
     </QueryClientProvider>
     </ErrorBoundary>
   );
@@ -97,5 +106,4 @@ function App() {
 
 
 export default App;
-
 
