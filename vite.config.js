@@ -11,6 +11,7 @@ export default defineConfig({
   
   // Path aliases for cleaner imports
   resolve: {
+    dedupe: ['react', 'react-dom', 'three'],
     alias: {
       '@': path.resolve(__dirname, './'),
       '@components': path.resolve(__dirname, './components'),
@@ -53,4 +54,3 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
   },
 })
-
