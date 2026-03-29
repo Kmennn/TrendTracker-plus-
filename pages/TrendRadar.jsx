@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Youtube, Instagram, Twitter, Facebook, Linkedin, ArrowUpRight } from 'lucide-react';
 import RadarScanner from '../components/RadarScanner';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const TrendRadar = () => {
   const [activeTab, setActiveTab] = useState('youtube');
   const [displayedTrends, setDisplayedTrends] = useState([]);
+  const isMobile = useMediaQuery('(max-width: 639px)');
 
   const allTrends = {
     youtube: [
@@ -128,15 +130,36 @@ const TrendRadar = () => {
     }
   };
 
+  const parseMetric = (metricStr) => {
+    if (!metricStr) return 0;
+    const cleanStr = metricStr.replace(/,/g, '').toLowerCase();
+    const value = parseFloat(cleanStr);
+    if (cleanStr.includes('m')) return value * 1000000;
+    if (cleanStr.includes('k')) return value * 1000;
+    return value;
+  };
+
   const activeTheme = themes[activeTab];
 
   useEffect(() => {
-    const shuffleAndSlice = (arr) => [...arr].sort(() => 0.5 - Math.random()).slice(0, 5);
-    const updateTrends = () => setDisplayedTrends(shuffleAndSlice(allTrends[activeTab]));
+    const updateTrends = () => {
+        let trends;
+        if (isMobile) {
+            // Mobile: Sort by engagement (metric) descending
+            trends = [...allTrends[activeTab]].sort((a, b) => parseMetric(b.metric) - parseMetric(a.metric)).slice(0, 5);
+        } else {
+             // Desktop: Shuffle for radar effect
+            trends = [...allTrends[activeTab]].sort(() => 0.5 - Math.random()).slice(0, 5);
+        }
+        setDisplayedTrends(trends);
+    };
+
     updateTrends();
+    
+    // Auto-refresh interval (keep it lively on both, though sorted list might not change order violently)
     const intervalId = setInterval(updateTrends, 6000);
     return () => clearInterval(intervalId);
-  }, [activeTab]);
+  }, [activeTab, isMobile]);
 
   const platformIcons = {
     youtube: <Youtube className={`w-5 h-5 ${themes.youtube.icon}`} />,
@@ -150,12 +173,12 @@ const TrendRadar = () => {
     <div className={`min-h-screen text-white overflow-hidden relative transition-colors duration-1000 ${activeTheme.background}`}>
       <div className="relative z-10 p-4 sm:p-6 lg:p-8">
         <motion.h1 
-            className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent text-center mb-12"
+            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent text-center mb-8 md:mb-12"
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
         >
-            Trend Radar
+            {isMobile ? "Top 5 Trending Signals" : "Trend Radar"}
         </motion.h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -165,7 +188,7 @@ const TrendRadar = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-                <div className="flex mb-6 bg-black/20 p-1.5 rounded-xl border border-white/10">
+                <div className="flex mb-6 bg-black/20 p-1.5 rounded-xl border border-white/10 overflow-x-auto no-scrollbar">
                     {Object.keys(allTrends).map(platform => (
                         <TabButton 
                             key={platform} 
@@ -192,11 +215,11 @@ const TrendRadar = () => {
                                 <div className={`bg-gray-900/80 rounded-lg p-4 flex items-center justify-between border transition-colors ${activeTheme.border}`}>
                                     <div className="flex items-center min-w-0">
                                         {platformIcons[activeTab]}
-                                        <span className="ml-4 text-lg font-medium text-gray-200 group-hover:text-white transition-colors truncate">{item.title}</span>
+                                        <span className="ml-4 text-base md:text-lg font-medium text-gray-200 group-hover:text-white transition-colors truncate">{item.title}</span>
                                     </div>
                                     <div className="flex items-center flex-shrink-0 ml-4">
-                                        <span className="text-gray-400 text-sm mr-4 group-hover:text-white transition-colors">{item.metric}</span>
-                                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transform transition-transform duration-300 group-hover:rotate-45" />
+                                        <span className="text-gray-400 text-xs md:text-sm mr-2 md:mr-4 group-hover:text-white transition-colors whitespace-nowrap">{item.metric}</span>
+                                        <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-gray-500 group-hover:text-white transform transition-transform duration-300 group-hover:rotate-45" />
                                     </div>
                                 </div>
                             </motion.div>
@@ -205,14 +228,17 @@ const TrendRadar = () => {
                 </AnimatePresence>
             </motion.div>
 
-            <motion.div 
-                className="hidden lg:block"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.4, type: 'spring' }}
-            >
-                <RadarScanner activePlatform={activeTab} trends={displayedTrends} theme={activeTheme} />
-            </motion.div>
+            {/* Radar Scanner - Hidden on Mobile */}
+            {!isMobile && (
+                <motion.div 
+                    className=""
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4, type: 'spring' }}
+                >
+                    <RadarScanner activePlatform={activeTab} trends={displayedTrends} theme={activeTheme} />
+                </motion.div>
+            )}
         </div>
       </div>
     </div>

@@ -1,33 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+/**
+ * SocialMoversList - Migrated to TanStack Query
+ * Uses useSocialMovers hook with automatic caching
+ */
+
+import React from 'react';
+import { useSocialMovers } from '../hooks/useStocks';
+import { ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import './SocialMoversList.css';
 
 const SocialMoversList = () => {
-  const [movers, setMovers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: movers = [], isLoading, error } = useSocialMovers();
 
-  useEffect(() => {
-    const fetchMovers = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('/api/social-movers');
-        setMovers(response.data);
-      } catch (error) {
-        console.error('Failed to fetch social movers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMovers();
-  }, []);
-
-  if (loading) {
-    return <div className="social-movers-list loading">Loading Social Movers...</div>;
+  if (isLoading) {
+    return (
+      <div className="social-movers-list loading">
+        <Loader2 className="animate-spin inline mr-2" /> Loading Social Movers...
+      </div>
+    );
   }
 
-  if (movers.length === 0) {
+  if (error || movers.length === 0) {
     return null; // Don't render the component if there's no data
   }
 

@@ -175,13 +175,13 @@ const ReportsModule = () => {
   const formatDate = (date) => new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="relative w-full text-white overflow-hidden rounded-2xl">
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} trends={trends} />
       <AnimatePresence>{notification && <Notification key={notification.id} {...notification} onClose={() => setNotification(null)} />}</AnimatePresence>
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent"></div>
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/background-stars.jpg)', opacity: 0.3 }}></div>
 
-      <main className="p-6 sm:p-8 z-10 w-full">
+      <div className="relative z-10 w-full">
         <div className="w-full max-w-8xl mx-auto">
           <header className="mb-8">
             <div className="flex justify-between items-center mb-6">
@@ -354,7 +354,7 @@ const ReportsModule = () => {
             </motion.div>
           </motion.div>
         )}</AnimatePresence>
-      </main>
+      </div>
     </div>
   );
 };

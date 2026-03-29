@@ -94,7 +94,7 @@ const Dashboard = () => {
         <header className="mb-10">
         <div className="flex items-baseline justify-between">
             <div>
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 mb-1">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500 mb-1">
                 Dashboard
             </h1>
             <p className="text-gray-400">Navigating the universe of trends.</p>
@@ -138,8 +138,8 @@ const Dashboard = () => {
         </motion.div>
         )}
         
-        <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="lg:col-span-2 space-y-6">
             <h2 className="text-xl font-semibold text-white mb-6">Trending Nebulae</h2>
             <div className="flex flex-wrap gap-2 mb-6">
                 {['All', 'Technology', 'Art', 'Music', 'Science', 'Sports', 'Business'].map(cat => (

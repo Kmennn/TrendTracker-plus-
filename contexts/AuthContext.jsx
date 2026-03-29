@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile 
+} from 'firebase/auth';
+import { auth } from '../src/firebaseConfig';
 
 const AuthContext = createContext();
 
@@ -11,84 +19,85 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && typeof parsedUser === 'object' && parsedUser.name) {
-          setUser(parsedUser);
-        } else {
-          localStorage.removeItem('user');
-          setUser(null);
-        }
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        // Map Firebase user to our app's user structure
+        const mappedUser = {
+          uid: currentUser.uid,
+          name: currentUser.displayName || 'User',
+          email: currentUser.email,
+          avatar: currentUser.photoURL || '/avatar.png',
+          role: 'User', // Default role for now
+        };
+        setUser(mappedUser);
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error('AuthContext: Corrupted user data in localStorage, clearing.', error);
-      localStorage.removeItem('user');
-      setUser(null);
-    } finally {
       setLoading(false);
-    }
+    });
+
+    return unsubscribe;
   }, []);
 
-  useEffect(() => {
+  const login = async (email, password) => {
     try {
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-      } else {
-        localStorage.removeItem('user');
-      }
+      await signInWithEmailAndPassword(auth, email, password);
+      return { success: true };
     } catch (error) {
-      console.error('Failed to save user to localStorage', error);
+      console.error("Login Error:", error);
+      let errorMessage = 'Login failed.';
+      if (error.code === 'auth/wrong-password') errorMessage = 'Incorrect password.';
+      if (error.code === 'auth/user-not-found') errorMessage = 'No account found with this email.';
+      if (error.code === 'auth/invalid-email') errorMessage = 'Invalid email address.';
+      return { success: false, error: errorMessage };
     }
-  }, [user]);
-
-  const login = (email, password) => {
-    console.log('Logging in with:', { email, password });
-    setLoading(true);
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const loggedInUser = {
-          uid: `user_${new Date().getTime()}`,
-          name: 'John Doe',
-          email: email,
-          avatar: '/avatar.png',
-          role: 'Admin',
-        };
-        setUser(loggedInUser);
-        setLoading(false);
-        resolve({ success: true });
-      }, 1000);
-    });
   };
 
-  const signup = (name, email, password) => {
-    console.log('Signing up with:', { name, email, password });
-    setLoading(true);
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const signedUpUser = {
-          uid: `user_${new Date().getTime()}`,
-          name: name,
-          email: email,
-          avatar: '/avatar.png',
-          role: 'User',
-        };
-        setUser(signedUpUser);
-        setLoading(false);
-        resolve({ success: true });
-      }, 1000);
-    });
+  const signup = async (name, email, password) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update display name immediately after signup
+      await updateProfile(userCredential.user, {
+        displayName: name
+      });
+      
+      // Force update of local state to reflect name immediately
+      setUser(prev => ({ ...prev, name: name }));
+      
+      return { success: true };
+    } catch (error) {
+        console.error("Signup Error:", error);
+      let errorMessage = 'Signup failed.';
+      if (error.code === 'auth/email-already-in-use') errorMessage = 'Email is already in use.';
+      if (error.code === 'auth/weak-password') errorMessage = 'Password should be at least 6 characters.';
+      return { success: false, error: errorMessage };
+    }
   };
 
-  const logout = () => {
-    console.log('Logging out');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
   };
 
-  const updateProfile = (profileData) => {
-    setUser(prevUser => ({ ...prevUser, ...profileData }));
+  const updateUserProfile = async (profileData) => {
+      // Could implement proper profile updates here
+      if (auth.currentUser) {
+          if (profileData.name) {
+             await updateProfile(auth.currentUser, { displayName: profileData.name });
+             setUser(prev => ({ ...prev, name: profileData.name }));
+          }
+      }
+  };
+
+  const getUserToken = async () => {
+    if (auth.currentUser) {
+      return await auth.currentUser.getIdToken();
+    }
+    return null;
   };
 
   const value = {
@@ -97,7 +106,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     signup,
-    updateProfile,
+    updateUserProfile,
+    getUserToken,
   };
 
   return (

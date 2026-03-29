@@ -1,48 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+/**
+ * MarketsPage - Migrated to TanStack Query
+ * Uses useStocks hook with automatic caching and 60s refresh
+ */
+
+import React from 'react';
+import { useStocks } from '../hooks/useStocks';
 import StockCard from '../components/StockCard';
-import SocialMoversList from '../components/SocialMoversList'; // Import the new component
+import SocialMoversList from '../components/SocialMoversList';
+import { Loader2 } from 'lucide-react';
 import './MarketsPage.css';
 
 const MarketsPage = () => {
-  const [stockData, setStockData] = useState({});
-  const symbols = ['IBM', 'TSCO.LON', 'RELIANCE.BSE']; // Same symbols as in the backend
-
-  useEffect(() => {
-    const fetchStockData = async () => {
-      const data = {};
-      for (const symbol of symbols) {
-        try {
-          const response = await axios.get(`/api/stocks/${symbol}`);
-          data[symbol] = response.data;
-        } catch (error) {
-          console.error(`Failed to fetch data for ${symbol}:`, error);
-          data[symbol] = null; // To indicate that data fetching failed
-        }
-      }
-      setStockData(data);
-    };
-
-    fetchStockData();
-    const interval = setInterval(fetchStockData, 60000); // Refresh every minute
-
-    return () => clearInterval(interval);
-  }, []); // Removed symbols from dependency array as it's constant
+  const { data: stockData = {}, isLoading, error } = useStocks();
+  const symbols = ['IBM', 'TSCO.LON', 'RELIANCE.BSE'];
 
   return (
     <div className="markets-page">
       <h1 className="page-title">Markets</h1>
       
-      {/* --- NEW: Social Movers List --- */}
+      {/* Social Movers Section */}
       <SocialMoversList />
 
       <h2 className="section-title">All Stocks</h2>
-      <div className="stock-grid">
-        {symbols.map(symbol => (
-          <StockCard key={symbol} symbol={symbol} data={stockData[symbol]} />
-        ))
-      }
-      </div>
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center p-8 text-gray-400">
+          <Loader2 className="animate-spin mr-2" /> Loading market data...
+        </div>
+      ) : error ? (
+        <div className="text-red-400 p-4">Failed to load market data. Please try again.</div>
+      ) : (
+        <div className="stock-grid">
+          {symbols.map(symbol => (
+            <StockCard key={symbol} symbol={symbol} data={stockData[symbol]} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

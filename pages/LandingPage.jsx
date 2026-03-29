@@ -1,276 +1,429 @@
-import React from 'react';
+/**
+ * LandingPage - Cinematic 3D Landing Experience
+ * 
+ * Architecture:
+ * - Layer 1 (z-0): Background gradient
+ * - Layer 2 (z-10): R3F Canvas with 3D scene
+ * - Layer 3 (z-30): Glass UI content
+ * 
+ * Scroll-driven camera + cursor parallax for desktop
+ */
+
+import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, BarChart3, Globe, Brain, Users, Star, Briefcase, Lightbulb, Target } from 'lucide-react';
-import Button from '../components/Button';
+import Lenis from 'lenis';
+import { 
+  TrendingUp, Globe, Brain, Users, Star, 
+  Briefcase, Lightbulb, Target, BarChart3, Sparkles,
+  ChevronDown, ArrowDown
+} from 'lucide-react';
+
+// Landing components
+import { LandingCanvas, GlassCard, MagneticButton, DashboardShowcase } from '../components/landing';
+
+// Hooks
+import { useScrollCamera } from '../hooks/useScrollCamera';
+import { useCursorParallax } from '../hooks/useCursorParallax';
+
+// Motion utilities
+import { isMobileDevice, prefersReducedMotion } from '../motion/uiCapabilities';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-
+  const lenisRef = useRef(null);
+  const containerRef = useRef(null);
+  const [isReady, setIsReady] = useState(false);
+  
+  const isMobile = isMobileDevice();
+  const reducedMotion = prefersReducedMotion();
+  
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    if (reducedMotion) {
+      setIsReady(true);
+      return;
+    }
+    
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    });
+    
+    lenisRef.current = lenis;
+    
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    
+    requestAnimationFrame(raf);
+    setIsReady(true);
+    
+    return () => {
+      lenis.destroy();
+    };
+  }, [reducedMotion]);
+  
+  // Scroll-driven camera
+  const camera = useScrollCamera(lenisRef);
+  
+  // Cursor parallax (desktop only)
+  const cursor = useCursorParallax({ intensity: 0.5, smoothing: 0.08 });
+  
+  // Feature cards data
   const features = [
-    { icon: TrendingUp, title: 'Real-time Trends', desc: 'Track emerging trends as they happen' },
+    { icon: TrendingUp, title: 'Real-time Trends', desc: 'Track emerging trends as they happen across India' },
     { icon: BarChart3, title: 'Advanced Analytics', desc: 'Deep insights with interactive visualizations' },
     { icon: Globe, title: 'Global Coverage', desc: 'Worldwide trend monitoring and analysis' },
     { icon: Brain, title: 'AI-Powered', desc: 'Smart recommendations and predictions' },
     { icon: Users, title: 'Team Collaboration', desc: 'Share insights and work together' },
     { icon: Star, title: 'Custom Reports', desc: 'Generate professional trend reports' }
   ];
-
+  
+  // Use cases data
   const useCases = [
-    { icon: Briefcase, title: 'Market Researchers', desc: 'Identify new market opportunities and validate hypotheses with real-time data.' },
-    { icon: Target, title: 'Business Strategists', desc: 'Monitor competitive landscape and inform strategic decisions with trend analysis.' },
-    { icon: Lightbulb, title: 'Product Managers', desc: 'Discover unmet user needs and inspire new feature development.' }
+    { icon: Briefcase, title: 'Market Researchers', desc: 'Identify new market opportunities with real-time data.' },
+    { icon: Target, title: 'Business Strategists', desc: 'Monitor competitive landscape and inform decisions.' },
+    { icon: Lightbulb, title: 'Product Managers', desc: 'Discover unmet user needs and inspire features.' }
   ];
-
-  const starField = Array.from({ length: 100 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 3 + 1,
-    opacity: Math.random() * 0.8 + 0.2
-  }));
-
+  
+  // Staggered animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.3,
+      },
+    },
+  };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+    },
+  };
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black relative overflow-hidden">
-      {/* Animated Star Field */}
-      <div className="absolute inset-0">
-        {starField.map((star) => (
-          <div
-            key={star.id}
-            className="absolute rounded-full bg-white animate-pulse"
-            style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Cosmic Glow Effects */}
-      <div className="absolute top-20 left-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-
-      <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
-            <TrendingUp className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">TrendTracker+</span>
-        </div>
-        <div className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-gray-300 hover:text-purple-300 transition-colors font-medium">Features</a>
-          <a href="#use-cases" className="text-gray-300 hover:text-purple-300 transition-colors font-medium">Use Cases</a>
-          <a href="#insights" className="text-gray-300 hover:text-purple-300 transition-colors font-medium">Insights</a>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/login')}
-            className="border-purple-400 text-purple-300 hover:bg-purple-400 hover:text-white"
-          >
-            Login
-          </Button>
-          <Button
-            onClick={() => navigate('/signup')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/25"
-          >
-            Sign Up
-          </Button>
-        </div>
-      </nav>
-
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 text-center py-20 px-6 max-w-6xl mx-auto"
-      >
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8"
-        >
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
-            Discover India's
-            <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-pulse">
-              Trending Universe
-            </span>
-          </h1>
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed"
-        >
-          Advanced analytics platform for strategic trend discovery across India’s digital landscape.
-          Harness AI-powered insights to navigate tomorrow’s opportunities today.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center"
-        >
-          <Button
-            size="lg"
-            onClick={() => navigate('/signup')}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-xl shadow-purple-500/25 text-lg px-8 py-4"
-          >
-            <Star className="w-5 h-5 mr-2" />
-            Start Exploring
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate('/dashboard')}
-            className="border-2 border-purple-400 text-purple-300 hover:bg-purple-400 hover:text-white shadow-lg text-lg px-8 py-4"
-          >
-            <Globe className="w-5 h-5 mr-2" />
-            View Live Trends
-          </Button>
-        </motion.div>
-      </motion.section>
-
-      <section id="features" className="relative z-10 py-20 px-6 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
-            Cosmic Intelligence Features
-          </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Navigate India’s digital trends with stellar precision and AI-powered insights
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="group bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-shadow">
-                  <feature.icon className="w-8 h-8 text-white" />
+    <div 
+      ref={containerRef}
+      className="min-h-screen bg-[#030712] relative"
+    >
+      {/* Layer 1: 3D Canvas (Fixed, behind everything) */}
+      {isReady && (
+        <LandingCanvas
+          cameraPosition={camera.position}
+          cameraLookAt={camera.lookAt}
+          cursorX={cursor.normalizedX}
+          cursorY={cursor.normalizedY}
+          scrollProgress={camera.progress}
+        />
+      )}
+      
+      {/* Layer 2: UI Content (Scrollable, on top) */}
+      <div className="relative z-20">
+        
+        {/* Navigation - Glassmorphism Pill Style (Curated.Media) */}
+        <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-2 px-2 py-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl">
+            {/* Logo */}
+            <div className="flex items-center gap-2 px-4 py-1">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-white font-semibold hidden sm:block">TrendTracker+</span>
+            </div>
+            
+            {/* Nav Links */}
+            <div className="hidden md:flex items-center">
+              <div className="relative group">
+                <button className="flex items-center gap-1 px-4 py-2 text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Product
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2">
+                  <a href="#features" className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 text-sm">
+                    <TrendingUp className="w-4 h-4" /> Real-time Trends
+                  </a>
+                  <a href="#features" className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 text-sm">
+                    <BarChart3 className="w-4 h-4" /> Analytics
+                  </a>
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-4 group-hover:text-purple-300 transition-colors">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section id="use-cases" className="relative z-10 py-20 px-6 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
-            Built for Visionaries
-          </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Empowering professionals to discover, analyze, and act on trends.
-          </p>
-        </motion.div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {useCases.map((useCase, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-              className="bg-gray-800/40 backdrop-blur-sm p-8 rounded-2xl border border-purple-500/20 text-center"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg shadow-purple-500/20">
-                <useCase.icon className="w-10 h-10 text-white" />
+              
+              <div className="relative group">
+                <button className="flex items-center gap-1 px-4 py-2 text-white/80 hover:text-white transition-colors text-sm font-medium">
+                  Channels
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2">
+                  <a href="#use-cases" className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 text-sm">
+                    <Globe className="w-4 h-4" /> Social Media
+                  </a>
+                  <a href="#use-cases" className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 text-sm">
+                    <Brain className="w-4 h-4" /> News
+                  </a>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold text-white mb-3">{useCase.title}</h3>
-              <p className="text-gray-400">{useCase.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section id="insights" className="relative z-10 py-20 px-6 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
-            From Data to Decisions
-          </h2>
-          <p className="text-gray-400 text-lg max-w-3xl mx-auto">
-            Our platform transforms scattered signals into clear, actionable insights, helping you to not just see the future, but shape it.
-          </p>
-        </motion.div>
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bg-gray-800/40 backdrop-blur-sm rounded-2xl border border-purple-500/20 p-12"
-        >
-            <p className="text-2xl text-center text-white leading-relaxed">
-                "TrendTracker+ has revolutionized our market analysis process. The AI-powered insights allow us to anticipate market shifts with incredible accuracy. It's an indispensable tool for our strategy team."
-            </p>
-            <p className="text-right mt-6 text-purple-300 font-semibold">— Virendra Mahajan</p>
-        </motion.div>
-      </section>
-
-      <section className="relative z-10 py-20 px-6 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto text-center">
+              
+              <a href="#use-cases" className="px-4 py-2 text-white/80 hover:text-white transition-colors text-sm font-medium">Resources</a>
+              <a href="#insights" className="px-4 py-2 text-white/80 hover:text-white transition-colors text-sm font-medium">Stories</a>
+            </div>
+            
+            {/* Right side buttons */}
+            <div className="flex items-center gap-2 pl-2">
+              <button 
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 text-white/80 hover:text-white transition-colors text-sm font-medium hidden sm:block"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => navigate('/signup')}
+                className="px-4 py-2 bg-white text-gray-900 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Get Started — It's Free
+              </button>
+            </div>
+          </div>
+        </nav>
+        
+        {/* Hero Section - LEFT ALIGNED like Curated.Media */}
+        <section className="min-h-screen flex items-center px-6 md:px-12 lg:px-20 pt-24">
+          {/* Left side content */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="mb-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-2xl"
           >
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-6">
-              Ready to Explore the Trend Universe?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Join thousands of analysts and strategists using TrendTracker+ to navigate India’s digital landscape
-            </p>
+            {/* Main Heading - LEFT ALIGNED */}
+            <motion.h1 
+              variants={itemVariants}
+              className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 leading-[1.1]"
+            >
+              Introducing
+              <motion.span 
+                className="block bg-gradient-to-r from-purple-400 via-violet-400 to-blue-400 bg-clip-text text-transparent"
+              >
+                TrendTracker+
+              </motion.span>
+            </motion.h1>
+            
+            {/* Tagline */}
+            <motion.p 
+              variants={itemVariants}
+              className="text-lg text-purple-300/80 mb-8 font-medium"
+            >
+              India's Trend Discovery Platform®
+            </motion.p>
+            
+            {/* CTA Buttons */}
+            <motion.div 
+              variants={itemVariants}
+              className="flex flex-wrap gap-3">
+              <MagneticButton 
+                variant="primary" 
+                size="lg"
+                onClick={() => navigate('/signup')}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Get Started — It's Free
+              </MagneticButton>
+              <MagneticButton 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate('/login')}
+              >
+                Book a Call
+              </MagneticButton>
+            </motion.div>
           </motion.div>
-
+          
+          {/* Scroll down indicator - RIGHT SIDE like Curated.Media */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.6 }}
+            className="fixed bottom-8 right-8 z-30"
           >
-            <Button
-              size="xl"
-              onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-2xl shadow-purple-500/25 text-xl px-12 py-6"
+            <a 
+              href="#features"
+              className="flex items-center gap-3 px-5 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white/20 transition-all group"
             >
-              <Star className="w-6 h-6 mr-3" />
-              Begin Your Journey
-            </Button>
+              <span className="text-white/80 text-sm font-medium">
+                Scroll down<br/>
+                <span className="text-purple-300">& discover</span>
+              </span>
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <ArrowDown className="w-4 h-4 text-white animate-bounce" />
+              </div>
+            </a>
           </motion.div>
-        </div>
-      </section>
+        </section>
+        
+        {/* Features Section */}
+        <section id="features" className="py-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
+                Cosmic Intelligence Features
+              </h2>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                Navigate India's digital trends with stellar precision and AI-powered insights
+              </p>
+            </motion.div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <GlassCard className="h-full">
+                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mb-5 shadow-lg shadow-purple-500/20">
+                      <feature.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
+                  </GlassCard>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Dashboard Showcase Section */}
+        <section id="dashboard">
+          <DashboardShowcase />
+        </section>
+        
+        {/* Use Cases Section */}
+        <section id="use-cases" className="py-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
+                Built for Visionaries
+              </h2>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                Empowering professionals to discover, analyze, and act on trends.
+              </p>
+            </motion.div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {useCases.map((useCase, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15 }}
+                >
+                  <GlassCard className="text-center h-full">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg shadow-purple-500/20">
+                      <useCase.icon className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-semibold text-white mb-3">{useCase.title}</h3>
+                    <p className="text-gray-400">{useCase.desc}</p>
+                  </GlassCard>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Testimonial Section */}
+        <section id="insights" className="py-24 px-6">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-4">
+                From Data to Decisions
+              </h2>
+              <p className="text-gray-500 text-lg">
+                Our platform transforms scattered signals into clear, actionable insights.
+              </p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+            >
+              <GlassCard padding="p-10" className="text-center">
+                <p className="text-xl md:text-2xl text-white leading-relaxed mb-6">
+                  "TrendTracker+ has revolutionized our market analysis process. The AI-powered insights allow us to anticipate market shifts with incredible accuracy. It's an indispensable tool for our strategy team."
+                </p>
+                <p className="text-purple-300 font-semibold">— Virendra Mahajan</p>
+              </GlassCard>
+            </motion.div>
+          </div>
+        </section>
+        
+        {/* Final CTA Section */}
+        <section className="py-24 px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="text-left max-w-2xl"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent mb-6">
+                Ready to Explore the Trend Universe?
+              </h2>
+              <p className="text-gray-400 text-lg mb-10 max-w-lg">
+                Join thousands of analysts and strategists using TrendTracker+ to navigate India's digital landscape
+              </p>
+              
+              <div className="flex justify-start">
+                <MagneticButton
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate('/signup')}
+                  icon={<Star className="w-5 h-5" />}
+                  className="text-lg px-10 py-5 shadow-xl shadow-purple-500/20"
+                >
+                  Begin Your Journey
+                </MagneticButton>
+              </div>
+            </motion.div>
+            
+            {/* Right side is reserved for the Avatar resting place */}
+            <div className="hidden md:block w-1/3"></div>
+          </div>
+        </section>
+        
+        {/* Footer spacer */}
+        <div className="h-20" />
+      </div>
     </div>
   );
 };
